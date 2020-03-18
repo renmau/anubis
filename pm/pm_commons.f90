@@ -39,7 +39,8 @@ module pm_commons
   integer::sinkint_level=0         ! maximum level currently active is where the global sink variables are updated
   real(dp)::ssoft                  ! sink softening lenght in code units
 
-  ! Particles related arrays
+  ! Particles related arrays 
+  ! ADDD NEUTRINOS HERE? THE CANONICAL MOMENTUM, Q? OR GO FROM Q TO VP?
   real(dp),allocatable,dimension(:,:)  ::xp       ! Positions
   real(dp),allocatable,dimension(:,:)  ::vp       ! Velocities
   real(dp),allocatable,dimension(:)    ::mp       ! Masses
@@ -62,10 +63,11 @@ module pm_commons
   integer,dimension(IRandNumSize) :: localseed=-1
 
   ! Particle types
-  integer, parameter   :: NFAMILIES=5
-  integer(1),parameter :: FAM_DM=1, FAM_STAR=2, FAM_CLOUD=3, FAM_DEBRIS=4, FAM_OTHER=5, FAM_UNDEF=127
+  ! ADD NEUTRINOS AS FAMILY
+  integer, parameter   :: NFAMILIES=6
+  integer(1),parameter :: FAM_DM=1, FAM_STAR=2, FAM_CLOUD=3, FAM_DEBRIS=4, FAM_OTHER=5, FAM_NEUTRINO=6, FAM_UNDEF=127
   integer(1),parameter :: FAM_TRACER_GAS=0
-  integer(1),parameter :: FAM_TRACER_DM=-1, FAM_TRACER_STAR=-2, FAM_TRACER_CLOUD=-3, FAM_TRACER_DEBRIS=-4, FAM_TRACER_OTHER=-5
+  integer(1),parameter :: FAM_TRACER_DM=-1, FAM_TRACER_STAR=-2, FAM_TRACER_CLOUD=-3, FAM_TRACER_DEBRIS=-4, FAM_TRACER_OTHER=-5, FAM_TRACER_NEUTRINO=-6
 
   ! Customize here for particle tags within particle types (e.g. different kind of stars).
   ! Note that the type should be integer(1) (1 byte integers) for memory concerns.
@@ -74,10 +76,11 @@ module pm_commons
 
   ! Particle keys for outputing. They should match the above particle
   ! types, except for 'under' family
+  ! ADD NEUTRINOS HERE
   character(len=13), dimension(-NFAMILIES:NFAMILIES), parameter :: particle_family_keys = (/ &
-       ' other_tracer', 'debris_tracer', ' cloud_tracer', '  star_tracer', ' other_tracer', &
+      'neutrino_tracer', ' other_tracer', 'debris_tracer', ' cloud_tracer', '  star_tracer', ' other_tracer', &
        '   gas_tracer', &
-       '           DM', '         star', '        cloud', '       debris', '        other'/)
+       '           DM', '         star', '        cloud', '       debris', '        other', '        neutrino'/)
 
   type(part_t), allocatable, dimension(:) :: typep  ! Particle type array
 
@@ -96,6 +99,11 @@ contains
     type(part_t), intent(in) :: typep
     is_DM = typep%family == FAM_DM
   end function is_DM
+
+  elemental logical pure function is_neutrino(typep)
+    type(part_t), intent(in) :: typep
+    is_neutrino = typep%family == FAM_NEUTRINO
+  end function is_neutrino
 
   elemental logical pure function is_star(typep)
     type(part_t), intent(in) :: typep
@@ -126,6 +134,7 @@ contains
     type(part_t), intent(in) :: typep
     is_not_DM = typep%family /= FAM_DM
   end function is_not_DM
+! ADD NEUTRINOS HERE LIKE OVER. ALSO IS_NOT_NEUTRINO?
   
 
   elemental function part2int (part)
@@ -162,6 +171,7 @@ contains
     ! DM     tpii == 0
     ! stars  tpii != 0 and idpii > 0
     ! sinks  tpii != 0 and idpii < 0
+    ! ADD NEUTRINOS HERE? WHAT RANGE?
     !
     ! This is mostly for support of GRAFFIC I/O.
     ! The reason we use idpii instead of idp is to prevent name clashes
@@ -169,7 +179,7 @@ contains
     integer, intent(in)  :: idpii
 
     type(part_t) :: props2type
-
+    ! ADD NEUTRINOS HERE, BUT WHAT RANGE?
     if (tpii == 0) then
        props2type%family = FAM_DM
     else if (idpii > 0) then

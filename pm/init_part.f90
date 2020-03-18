@@ -1,4 +1,4 @@
- subroutine init_part
+  subroutine init_part
   use amr_commons
   use pm_commons
   use clfind_commons
@@ -65,6 +65,7 @@
   end if
 
   ! Allocate particle variables
+  ! MAKE SURE NPARTMAX HAS ENOUGH FOR DM AND NEUTRINOS (OR DO WE PUT THEM SEPARATE?)
   allocate(xp    (npartmax,ndim))
   allocate(vp    (npartmax,ndim))
   allocate(mp    (npartmax))
@@ -206,7 +207,7 @@
      if(cosmo)then
         min_mdm_cpu = 1
         do ipart=1,npart2
-           ! Get dark matter only
+           ! Get dark matter only ! DO WE ALSO WANT NEUTRINOS? WHAT DOES THIS DO?
            if (is_DM(typep(ipart))) then
               ! note: using two nested if so that the second one is only evaluated for DM particles
               if (mp(ipart) .lt. min_mdm_cpu) min_mdm_cpu = mp(ipart)
@@ -220,7 +221,7 @@
 #endif
         ilevel = 1
         do while(.true.)
-           mm1 = 0.5d0**(3*ilevel)*(1.0d0-omega_b/omega_m)
+           mm1 = 0.5d0**(3*ilevel)*(1.0d0-omega_b/omega_m) ! DO WE HAVE TO ALTER OMEGA_M, OMEGA_DM OR OMEGA_NU?
            if((mm1 >  0.90d0*min_mdm_all).AND.(mm1 < 1.10d0*min_mdm_all))then
               nlevelmax_part = ilevel
               exit
@@ -368,7 +369,7 @@ contains
        !---------------------------------------------------------------------
        ! Second step: read initial condition file and set particle velocities
        !---------------------------------------------------------------------
-       ! Allocate initial conditions array
+       ! Allocate initial conditions array ! NEED NEW ONE FOR NEUTRINOS, OR USE THE SAME?
        if(active(ilevel)%ngrid>0)then
           allocate(init_array(i1_min:i1_max,i2_min:i2_max,i3_min:i3_max))
           allocate(init_array_x(i1_min:i1_max,i2_min:i2_max,i3_min:i3_max))
@@ -615,7 +616,7 @@ contains
     ! Initial particle number
     npart=ipart
 
-    ! Move particle according to Zeldovich approximation
+    ! Move particle according to Zeldovich approximation ! NEUTRINOS INCLUDED HERE? AUTOMATIC?
     if(.not. read_pos)then
        xp(1:npart,1:ndim)=xp(1:npart,1:ndim)+vp(1:npart,1:ndim)
     endif
@@ -691,6 +692,7 @@ contains
     call MPI_ALLTOALL(sendbuf,1,MPI_INTEGER,recvbuf,1,MPI_INTEGER,MPI_COMM_WORLD,info)
 
     ! Compute total number of newly created particles
+    ! NEUTRINOS AUTOMATICALLY IN THIS?
     npart_new=0
     do icpu=1,ncpu
        npart_new=npart_new+recvbuf(icpu)
@@ -794,7 +796,7 @@ contains
     ! Wait for full completion of sends
     call MPI_WAITALL(countsend,reqsend,statuses,info)
 
-    ! Create new particles
+    ! Create new particles ! ADD NEUTRINOS?
     do icpu=1,ncpu
        do ibuf=1,recvbuf(icpu)
           jpart=jpart+1
@@ -844,10 +846,15 @@ contains
        levelp(ipart)=levelmin
     end do
 
-    ! Setup DM for all particles
+    ! Setup DM for all particles ! SETUP NEUTRINOS???
     do ipart=1, npart
        typep(ipart)%family = FAM_DM
-       typep(ipart)%tag = 0
+       
+       if (MOD(ipart,2) == 0) then
+         typep(ipart)%family = FAM_NEUTRINO
+       end if
+
+       typep(ipart)%tag = 0 ! GIVE NEUTRINOS DIFFERENT TAG, OR KEEP 0?
     end do
 
     ! Compute particle initial age and metallicity
@@ -860,7 +867,7 @@ contains
        end do
     end if
 
-    ! Compute particle initial identity
+    ! Compute particle initial identity ! WHAT DOES THIS MEAN FOR NEUTRINOS?
     if(.not.read_ids) then
       npart_cpu=0; npart_all=0
       npart_cpu(myid)=npart
@@ -889,7 +896,7 @@ contains
   end subroutine load_grafic
 
   subroutine load_ascii
-    ! This function load from ASCII file. As is, you can only load dark matter particles
+    ! This function load from ASCII file. As is, you can only load dark matter particles ! ADD NEUTRINOS??
     ! Local particle count
     ipart=0
 
@@ -907,7 +914,7 @@ contains
           if(myid==1)then
              jpart=0
              do i=1,nvector
-                read(10,*,end=111)xx1,xx2,xx3,vv1,vv2,vv3,mm1
+                read(10,*,end=111)xx1,xx2,xx3,vv1,vv2,vv3,mm1 ! DM ONLY, ADD NEUTRINOS?
                 jpart=jpart+1
                 indglob=indglob+1
                 xx(i,1)=xx1+boxlen/2
@@ -918,9 +925,9 @@ contains
                 vv(i,3)=vv3
                 mm(i  )=mm1
                 ii(i  )=indglob
-                tmppart%family = FAM_DM
+                tmppart%family = FAM_DM ! HERE?
                 tmppart%tag    = 0
-                pp(i  )=part2int(tmppart)
+                pp(i  )=part2int(tmppart) ! THIS ONE ALSO? OR CHANGED IN OTHER FILE?
              end do
 111          continue
              if(jpart<nvector)eof=.true.
@@ -952,7 +959,7 @@ contains
                 mp(ipart)    = mm(i)
                 levelp(ipart)= levelmin
                 idp(ipart)   = ii(i)
-                ! Get back the particle type from the communicated
+                ! Get back the particle type from the communicated ! CHANGE SOMETHING HERE??
                 ! shortened integer
                 typep(ipart) = int2part(pp(i))
 #ifndef WITHOUTMPI
@@ -990,7 +997,7 @@ end subroutine init_part
 #define TIME_END(ce) call SYSTEM_CLOCK(COUNT=ce)
 #define TIME_SPENT(cs,ce,cr) REAL((ce-cs)/cr)
 subroutine load_gadget
-  ! This routine only creates DM particles
+  ! This routine only creates DM particles ! ADD NEUTRINOS?
   use amr_commons
   use pm_commons
   use gadgetreadfilemod
@@ -1038,7 +1045,7 @@ subroutine load_gadget
      do ifile=0,numfiles-1
         call gadgetreadheader(filename, ifile, gadgetheader, ok)
         nparticles = gadgetheader%npart(2)
-        allocate(pos(3,nparticles))
+        allocate(pos(3,nparticles)) ! ADD HERE?
         allocate(vel(3,nparticles))
         allocate(ids(nparticles))
         TIME_START(clock_start)
@@ -1048,7 +1055,7 @@ subroutine load_gadget
              TIME_SPENT(clock_start, clock_end, clock_rate)
         start = 1
         TIME_START(clock_start)
-        do i=1,nparticles
+        do i=1,nparticles ! HERE?
            xx_dp(1,1) = pos(1,i)/gadgetheader%boxsize
            xx_dp(1,2) = pos(2,i)/gadgetheader%boxsize
            xx_dp(1,3) = pos(3,i)/gadgetheader%boxsize
@@ -1063,7 +1070,7 @@ subroutine load_gadget
                  call clean_stop
               end if
 #endif
-              xp(ipart,1:3)=xx_dp(1,1:3)
+              xp(ipart,1:3)=xx_dp(1,1:3) ! HERE?
               vp(ipart,1)  =vel(1, i) * gadgetvfact
               vp(ipart,2)  =vel(2, i) * gadgetvfact
               vp(ipart,3)  =vel(3, i) * gadgetvfact
@@ -1072,7 +1079,7 @@ subroutine load_gadget
               idp(ipart)   =ids(i)
 
               ! Get the particle type
-              typep(ipart)%family = FAM_DM
+              typep(ipart)%family = FAM_DM ! ADD FAMILY HERE, OR MAKE OWN SUBROUTINE?
               typep(ipart)%tag    = 0
 #ifndef WITHOUTMPI
            endif

@@ -54,11 +54,11 @@ subroutine newdt_fine(ilevel)
      dtnew(ilevel)=MIN(dtnew(ilevel),courant_factor*tff)
   end if
   if(cosmo)then
-     dtnew(ilevel)=MIN(dtnew(ilevel),0.1d0/hexp)
+     dtnew(ilevel)=MIN(dtnew(ilevel),0.1d0/hexp) ! CHANGE ANYTHING HERE??
   end if
 
 #ifdef ATON
-  ! Maximum time step for ATON
+  ! Maximum time step for ATON ! WHAT IS ATON??
   if(aton)then
      dt_aton = aton_time_step()
      if(dt_aton>0d0)then
@@ -90,13 +90,13 @@ subroutine newdt_fine(ilevel)
         do jgrid=1,numbl(myid,ilevel)
            npart1=numbp(igrid)   ! Number of particles in the grid
            if(npart1>0)then
-              ! Loop over particles
+              ! Loop over particles ! DISTINGUISH PARTICLES HERE????
               ipart=headp(igrid)
               do jpart=1,npart1
                  ip=ip+1
                  ind_part(ip)=ipart
                  if(ip==nvector)then
-                    call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel)
+                    call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel) ! CHECK THIS FUNCTION
                     ip=0
                  end if
                  ipart=nextp(ipart)    ! Go to next particle
@@ -148,7 +148,7 @@ subroutine newdt2(ind_part,dt_loc,ekin_loc,nn,ilevel)
   real(dp),dimension(1:nvector),save::v2,mmm
   real(dp),dimension(1:nvector,1:ndim)::vvv
 
-  ! Compute time step
+  ! Compute time step ! CHANGE ANYTHING HERE FOR NEUTRINOS??
   dx=0.5D0**ilevel
   nx_loc=(icoarse_max-icoarse_min+1)
   scale=boxlen/dble(nx_loc)
@@ -169,7 +169,7 @@ subroutine newdt2(ind_part,dt_loc,ekin_loc,nn,ilevel)
      end if
   end do
 
-  ! Fetch mass
+  ! Fetch mass ! WHICH MASS??
   do i = 1, nn
      mmm(i) = mp(ind_part(i))
   end do
@@ -177,7 +177,7 @@ subroutine newdt2(ind_part,dt_loc,ekin_loc,nn,ilevel)
   ! Compute kinetic energy
   do idim=1,ndim
      do i=1,nn
-        ekin_loc=ekin_loc+0.5D0*mmm(i)*vvv(i, idim)**2
+        ekin_loc=ekin_loc+0.5D0*mmm(i)*vvv(i, idim)**2 ! SHOULD BE RELATIVISTIC FOR NEUTRINOS??
      end do
   end do
 

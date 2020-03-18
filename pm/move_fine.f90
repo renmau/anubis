@@ -36,9 +36,10 @@ subroutine move_fine(ilevel)
            end if
            ip=ip+1
            ind_part(ip)=ipart
+           write(*,*) typep(ipart)%family
            ind_grid_part(ip)=ig
            if(ip==nvector)then
-              call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
+              call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel) ! HERE PARTICLES GET MOVED FORWARD - INCLUDE NEUTRINOS
               ip=0
               ig=0
            end if
@@ -50,6 +51,8 @@ subroutine move_fine(ilevel)
   end do
   ! End loop over grids
   if(ip>0)call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
+
+  stop
 
 111 format('   Entering move_fine for level ',I2)
 
@@ -96,6 +99,7 @@ subroutine move_fine_static(ilevel)
                    & (.not. static_stars .and. is_not_DM(typep(ipart)) )  ) then                 
                  ! FIXME: there should be a static_sink as well
                  ! FIXME: what about debris?
+                 ! NEUTRINOS????
                  npart2=npart2+1
               endif
            else
@@ -448,7 +452,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
               ff(j,idim)=ff(j,idim)+f(indp(j,ind),idim)*vol(j,ind)
            end do
         end do
-#ifdef OUTPUT_PARTICLE_POTENTIAL
+#ifdef OUTPUT_PARTICLE_POTENTIAL ! GRAVITY - MUST ADD NEUTRINOS TO GRAVITY
         do j=1,np
            ptcl_phi(ind_part(j)) = phi(indp(j,ind))
         end do
@@ -464,7 +468,13 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
-           new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
+           if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
+              new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
+              write(*,*) 'updating neutrino velocities'
+           else ! DM
+              new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
+              write (*,*) 'updating DM velocities'
+           endif
         end do
      endif
   end do
@@ -493,11 +503,17 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   do idim=1,ndim
      if(static)then
         do j=1,np
-           new_xp(j,idim)=xp(ind_part(j),idim)
+           new_xp(j,idim)=xp(ind_part(j),idim) ! NO CHANGE - STATIC
         end do
      else
         do j=1,np
-           new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel)
+           if (is_neutrino(typep(ind_part(j)))) then !neutrinos
+              new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel)
+              write(*,*) 'updating neutrino positions'
+           else 
+              new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel)
+              write (*,*) 'updating DM positions'
+           endif
         end do
      endif
   end do

@@ -6,11 +6,11 @@
 # Do we want a debug build? 1=Yes, 0=No
 DEBUG = 0
 # Compiler flavor: GNU or INTEL
-COMPILER = GNU
+COMPILER = INTEL
 # Size of vector cache
 NVECTOR = 32
 # Number of dimensions
-NDIM = 1
+NDIM = 3
 # Float precision size
 NPRE = 8
 # hydro/mhd solver
@@ -20,7 +20,7 @@ PATCH =
 # Use RT? 1=Yes, 0=No
 RT = 0
 # Use MPI? 1=Yes, 0=No
-MPI = 0
+MPI = 1
 MPIF90 = mpif90
 # Root name of executable
 EXEC = ramses

@@ -139,6 +139,7 @@ subroutine rho_fine(ilevel,icount)
   ! Compute particle contribution to density field
   !---------------------------------------------------------
   ! Compute density due to current level particles
+  ! ADD NEUTRINOS, OR AUTOMATIC?
   if(pic)then
      call rho_from_current_level(ilevel)
   end if
@@ -250,7 +251,7 @@ subroutine rho_from_current_level(ilevel)
      ig=0
      ip=0
      do jgrid=1,numbl(icpu,ilevel)
-        npart1=numbp(igrid)  ! Number of particles in the grid
+        npart1=numbp(igrid)  ! Number of particles in the grid ! NEUTRINOS IN HERE?
         if(npart1>0)then
            ig=ig+1
            ind_grid(ig)=igrid
@@ -383,6 +384,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
   end do
 
   ! Gather particle mass and family
+  ! NEUTRINOS AUTOMATICALLY INCLUDED???
   do j=1,np
      fam(j) = typep(ind_part(j))
      if (is_tracer(fam(j))) then
@@ -564,7 +566,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>cic_levelmax)then
         do j=1,np
-           ! check for non-DM (and non-tracer)
+           ! check for non-DM (and non-tracer) !NEUTRINOS???
            if ( ok(j) .and. is_not_DM(fam(j)) ) then
               rho(indp(j,ind))=rho(indp(j,ind))+vol2(j)
            end if
@@ -573,7 +575,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
 
      if(ilevel==cic_levelmax)then
         do j=1,np
-           ! check for DM
+           ! check for DM ! NEUTRINOS PART OF DM?
            if ( ok(j) .and. is_DM(fam(j)) ) then
               rho_top(indp(j,ind))=rho_top(indp(j,ind))+vol2(j)
            end if
@@ -600,7 +602,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      endif
 
-     ! Rescale the mass by mass_sph for baryon particles
+     ! Rescale the mass by mass_sph for baryon particles !NEUTRINOS COUNT AS PART OF DM?
      if(star)then
         do j=1,np
            if ( is_not_DM(fam(j)) ) then
@@ -1095,7 +1097,7 @@ subroutine cic_cell(ind_grid,ngrid,ilevel)
         end do
      end do
 
-     ! Update mass density and number density fields
+     ! Update mass density and number density fields ! NEUTRINOS IN THIS ALREADY?
      do ind=1,twotondim
         do j=1,np
            ok(j)=igrid(j,ind)>0
@@ -1187,7 +1189,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
      end do
   end do
 
-  ! Gather particle mass & type
+  ! Gather particle mass & type !NEUTRINOS AUTOMATIC?
   do j=1,np
      fam(j) = typep(ind_part(j))
      if (is_tracer(fam(j))) then
@@ -1368,7 +1370,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
      end do
   end do
 
-  ! Update mass density and number density fields
+  ! Update mass density and number density fields ! NEUTRINOS AUTOMATIC?
   do ind=1,threetondim
 
      do j=1,np
@@ -1391,7 +1393,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>cic_levelmax) then
         do j=1,np
-           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then
+           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then ! SHOULD NEUTRINOS BE CONNECTED TO DM SOMEHOW?
               rho(indp(j,ind))=rho(indp(j,ind))+vol2(j)
            end if
         end do
@@ -1429,7 +1431,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      endif
 
-     ! For low mass baryon particles
+     ! For low mass baryon particles ! NOT NEUTRINOS?
      if(star) then
         do j=1,np
            if ( is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then
@@ -1446,7 +1448,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>=cic_levelmax) then
         do j=1,np
-           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then
+           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then ! WHAT HAPPENS HERE? SHOULD IT HAPPEN FOR NEUTRINOS?
               phi(indp(j,ind))=phi(indp(j,ind))+vol2(j)
            end if
         end do
@@ -1777,7 +1779,7 @@ subroutine tsc_cell(ind_grid,ngrid,ilevel)
         end do
      end do
 
-     ! Update mass density and number density fields
+     ! Update mass density and number density fields !NEUTRINOS AUTOMATICALLY INCLUDED?
      do ind=1,twotondim
         do j=1,np
            ok(j)=igrid(j,ind)>0
