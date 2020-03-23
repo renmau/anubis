@@ -12,6 +12,7 @@ subroutine move_fine(ilevel)
   integer::igrid,jgrid,ipart,jpart,next_part,ig,ip,npart1
   integer,dimension(1:nvector),save::ind_grid,ind_part,ind_grid_part
 
+
   if(numbtot(1,ilevel)==0)return
   if(verbose)write(*,111)ilevel
 
@@ -36,7 +37,7 @@ subroutine move_fine(ilevel)
            end if
            ip=ip+1
            ind_part(ip)=ipart
-           write(*,*) typep(ipart)%family
+           !write(*,*) typep(ipart)%family
            ind_grid_part(ip)=ig
            if(ip==nvector)then
               call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel) ! HERE PARTICLES GET MOVED FORWARD - INCLUDE NEUTRINOS
@@ -52,7 +53,7 @@ subroutine move_fine(ilevel)
   ! End loop over grids
   if(ip>0)call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
 
-  stop
+  !stop
 
 111 format('   Entering move_fine for level ',I2)
 
@@ -197,6 +198,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   real(dp),dimension(1:nvector,1:twotondim),save::vol
   integer ,dimension(1:nvector,1:twotondim),save::igrid,icell,indp,kg
   real(dp),dimension(1:3)::skip_loc
+  real(dp),allocatable,dimension(:)    ::vp2       ! q**2 for the new e.o.m with neutrinos
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
@@ -461,6 +463,8 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   endif
 
   ! Update velocity
+  allocate(vp2(np))
+  vp2(1:np) = vp(1:np,1)**2 + vp(1:np,2)**2 + vp(1:np,3)**2
   do idim=1,ndim
      if(static.or.tracer)then
         do j=1,np
@@ -468,12 +472,15 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
+          !write(*,*) vp2(j)
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
-              new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
-              write(*,*) 'updating neutrino velocities'
+              !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
+              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !write(*,*) 'updating neutrino velocities'
            else ! DM
-              new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
-              write (*,*) 'updating DM velocities'
+              !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
+              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !write (*,*) 'updating DM velocities'
            endif
         end do
      endif
@@ -493,12 +500,22 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   end if
 
   ! Store velocity
+  !allocate(vp2(np))
+  !write(*,*) vp2
+  !vp2(1:np)=0.0D0
+  !write(*,*) vp2
   do idim=1,ndim
      do j=1,np
         vp(ind_part(j),idim)=new_vp(j,idim)
+        !vp2(ind_part(j)) = vp2(ind_part(j)) + vp(ind_part(j),idim)**2 ! do I actually need to do this? it redefine next round on line 467 anyways?
      end do
   end do
+  ! random test:
+  !write(*,*) vp(10,1), vp(10,2), vp(10,3)
+  !write(*,*) 'hei'
+  !write(*,*) vp2(10)
 
+!stop 
   ! Update position
   do idim=1,ndim
      if(static)then
@@ -508,11 +525,13 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      else
         do j=1,np
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
-              new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel)
-              write(*,*) 'updating neutrino positions'
+              !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
+              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              !write(*,*) 'updating neutrino positions'
            else 
-              new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel)
-              write (*,*) 'updating DM positions'
+              !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
+              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              !write (*,*) 'updating DM positions'
            endif
         end do
      endif

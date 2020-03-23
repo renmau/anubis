@@ -92,14 +92,19 @@ subroutine newdt_fine(ilevel)
            if(npart1>0)then
               ! Loop over particles ! DISTINGUISH PARTICLES HERE????
               ipart=headp(igrid)
-              do jpart=1,npart1
-                 ip=ip+1
-                 ind_part(ip)=ipart
-                 if(ip==nvector)then
-                    call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel) ! CHECK THIS FUNCTION
-                    ip=0
-                 end if
-                 ipart=nextp(ipart)    ! Go to next particle
+              do jpart=1,npart1 ! MAKE SURE NEUTRINOS ARE NOT ADDED TO THIS LIST
+                !write(*,*) (is_not_neutrino(typep(jpart)))
+                if (is_not_neutrino(typep(jpart))) then
+                  !write(*,*) 'removing neutrinos for dtnew - this is a DM particle'
+                  ip=ip+1
+                  !write(*,*) ip
+                  ind_part(ip)=ipart
+                  if(ip==nvector)then
+                      call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel) ! CHECK THIS FUNCTION
+                      ip=0
+                  end if
+                  ipart=nextp(ipart)    ! Go to next particle
+                end if
               end do
               ! End loop over particles
            end if

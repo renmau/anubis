@@ -235,6 +235,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   real(dp),dimension(1:nvector,1:twotondim),save::vol
   integer ,dimension(1:nvector,1:twotondim),save::igrid,icell,indp,kg
   real(dp),dimension(1:3)::skip_loc
+  real(dp),allocatable,dimension(:)    ::vpp2       ! q**2 for the new e.o.m with neutrinos
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
@@ -508,6 +509,8 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   end do
 
   ! Update 3-velocity
+  allocate(vpp2(np))
+  vpp2(1:np) = vp(1:np,1)**2 + vp(1:np,2)**2 + vp(1:np,3)**2
   do idim=1,ndim
      if(static)then
         do j=1,np
@@ -515,13 +518,16 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
-           new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j)
+           !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !CHANGE HERE AS BEFORE
+           new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vpp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vpp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dteff(j) ! relativistic update
         end do
      endif
   end do
+  !vpp2(1:np)=0.0D0 !added
   do idim=1,ndim
      do j=1,np
         vp(ind_part(j),idim)=new_vp(j,idim)
+        !vpp2(ind_part(j)) = vpp2(ind_part(j)) + vp(ind_part(j),idim)**2 ! added
      end do
   end do
 

@@ -40,7 +40,6 @@ module pm_commons
   real(dp)::ssoft                  ! sink softening lenght in code units
 
   ! Particles related arrays 
-  ! ADDD NEUTRINOS HERE? THE CANONICAL MOMENTUM, Q? OR GO FROM Q TO VP?
   real(dp),allocatable,dimension(:,:)  ::xp       ! Positions
   real(dp),allocatable,dimension(:,:)  ::vp       ! Velocities
   real(dp),allocatable,dimension(:)    ::mp       ! Masses
@@ -135,6 +134,11 @@ contains
     is_not_DM = typep%family /= FAM_DM
   end function is_not_DM
 ! ADD NEUTRINOS HERE LIKE OVER. ALSO IS_NOT_NEUTRINO?
+
+  elemental logical pure function is_not_neutrino(typep)
+    type(part_t), intent(in) :: typep
+    is_not_neutrino = typep%family /= FAM_NEUTRINO
+  end function is_not_neutrino
   
 
   elemental function part2int (part)
