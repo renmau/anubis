@@ -472,15 +472,13 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
-          !write(*,*) vp2(j)
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
+              ! use boxlen_ini or boxlen? boxlen_ini = Mpc, boxlen = 1.0000
               new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
-              !write(*,*) 'updating neutrino velocities'
            else ! DM
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
               new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
-              !write (*,*) 'updating DM velocities'
            endif
         end do
      endif
@@ -501,9 +499,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
 
   ! Store velocity
   !allocate(vp2(np))
-  !write(*,*) vp2
   !vp2(1:np)=0.0D0
-  !write(*,*) vp2
   do idim=1,ndim
      do j=1,np
         vp(ind_part(j),idim)=new_vp(j,idim)
@@ -527,11 +523,12 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
               new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
-              !write(*,*) 'updating neutrino positions'
            else 
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
+              !write(*,*) 'old:', new_xp(j,idim)
               new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
-              !write (*,*) 'updating DM positions'
+              !write(*,*) 'new:', new_xp(j,idim)
+              !write(*,*) '----------------'
            endif
         end do
      endif
@@ -541,6 +538,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         xp(ind_part(j),idim)=new_xp(j,idim)
      end do
   end do
+  !write(*,*) xp(5,1)
 
 end subroutine move1
 !#########################################################################

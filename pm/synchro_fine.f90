@@ -517,7 +517,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
            new_vp(j,idim)=ff(j,idim)
         end do
      else
-        do j=1,np
+        do j=1,np !have to add neutrino test here? Not necessary yet
            !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !CHANGE HERE AS BEFORE
            new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vpp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vpp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dteff(j) ! relativistic update
         end do
@@ -527,7 +527,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   do idim=1,ndim
      do j=1,np
         vp(ind_part(j),idim)=new_vp(j,idim)
-        !vpp2(ind_part(j)) = vpp2(ind_part(j)) + vp(ind_part(j),idim)**2 ! added
+        !vpp2(ind_part(j)) = vpp2(ind_part(j)) + vp(ind_part(j),idim)**2 ! added - this is done on line 513 instead
      end do
   end do
 

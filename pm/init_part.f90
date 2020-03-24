@@ -850,9 +850,9 @@ contains
     do ipart=1, npart
        typep(ipart)%family = FAM_DM
        
-       if (MOD(ipart,2) == 0) then
-         typep(ipart)%family = FAM_NEUTRINO
-       end if
+       !if (MOD(ipart,2) == 0) then
+         !typep(ipart)%family = FAM_NEUTRINO
+       !end if
 
        typep(ipart)%tag = 0 ! GIVE NEUTRINOS DIFFERENT TAG, OR KEEP 0?
     end do
