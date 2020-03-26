@@ -475,10 +475,10 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
               ! use boxlen_ini or boxlen? boxlen_ini = Mpc, boxlen = 1.0000
-              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
            else ! DM
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
-              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
            endif
         end do
      endif
@@ -522,11 +522,11 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         do j=1,np
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
-              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
            else 
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
               !write(*,*) 'old:', new_xp(j,idim)
-              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
               !write(*,*) 'new:', new_xp(j,idim)
               !write(*,*) '----------------'
            endif

@@ -519,7 +519,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      else
         do j=1,np !have to add neutrino test here? Not necessary yet
            !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !CHANGE HERE AS BEFORE
-           new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vpp2(j)/h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vpp2(j)/h0**2 + aexp**2))*ff(j,idim)*0.5D0*dteff(j) ! relativistic update
+           new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vpp2(j)/(2998.0D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vpp2(j)/(2998.0D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dteff(j) ! relativistic update
         end do
      endif
   end do
