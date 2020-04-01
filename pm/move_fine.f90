@@ -198,7 +198,9 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   real(dp),dimension(1:nvector,1:twotondim),save::vol
   integer ,dimension(1:nvector,1:twotondim),save::igrid,icell,indp,kg
   real(dp),dimension(1:3)::skip_loc
+
   real(dp),allocatable,dimension(:)    ::vp2       ! q**2 for the new e.o.m with neutrinos
+  real(dp)::D                               ! will be used in e.o.m
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
@@ -472,13 +474,24 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
+          D = boxlen_ini**2*vp2(j)/(2997.92458D0)**2/aexp**2
+          !D = 0.0D0
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
               ! use boxlen_ini or boxlen? boxlen_ini = Mpc, boxlen = 1.0000
-              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)*h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
            else ! DM
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
-              new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)*h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
+              if (D > 0.00001D0) then
+                !write(*,*) boxlen_ini**2*vp2(j)/(2997.9D0)**2/aexp**2
+                write(*,*) 'HEI',D
+              endif
+
            endif
         end do
      endif
@@ -498,20 +511,13 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   end if
 
   ! Store velocity
-  !allocate(vp2(np))
-  !vp2(1:np)=0.0D0
   do idim=1,ndim
      do j=1,np
         vp(ind_part(j),idim)=new_vp(j,idim)
-        !vp2(ind_part(j)) = vp2(ind_part(j)) + vp(ind_part(j),idim)**2 ! do I actually need to do this? it redefine next round on line 467 anyways?
      end do
   end do
-  ! random test:
-  !write(*,*) vp(10,1), vp(10,2), vp(10,3)
-  !write(*,*) 'hei'
-  !write(*,*) vp2(10)
 
-!stop 
+
   ! Update position
   do idim=1,ndim
      if(static)then
@@ -520,15 +526,17 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
+          D = boxlen_ini**2*vp2(j)/(2997.92458D0)**2/aexp**2
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
-              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)/sqrt(D+1.0D0)*dtnew(ilevel)
            else 
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
-              !write(*,*) 'old:', new_xp(j,idim)
-              new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2998.0D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
-              !write(*,*) 'new:', new_xp(j,idim)
-              !write(*,*) '----------------'
+              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
+              new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)/sqrt(D+1.0D0)*dtnew(ilevel)
            endif
         end do
      endif
