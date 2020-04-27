@@ -996,7 +996,7 @@ end subroutine init_part
 #define TIME_START(cs) call SYSTEM_CLOCK(COUNT=cs)
 #define TIME_END(ce) call SYSTEM_CLOCK(COUNT=ce)
 #define TIME_SPENT(cs,ce,cr) REAL((ce-cs)/cr)
-subroutine load_gadget
+subroutine load_gadget ! modify routine to red neutrinos and cdm
   ! This routine only creates DM particles ! ADD NEUTRINOS?
   use amr_commons
   use pm_commons
@@ -1028,7 +1028,11 @@ subroutine load_gadget
   ipart=0
   call SYSTEM_CLOCK(COUNT_RATE=clock_rate)
 
-  if(TRIM(initfile(levelmin)).NE.' ')then
+  !!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!READ DM!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!
+
+  if(TRIM(initfile(levelmin)).NE.' ')then ! initfile = fila vi skal lese, must add variable for neutrinos too
      filename=TRIM(initfile(levelmin))
      ! read first header to get information
      call gadgetreadheader(filename, 0, gadgetheader, ok)
@@ -1045,7 +1049,7 @@ subroutine load_gadget
      do ifile=0,numfiles-1
         call gadgetreadheader(filename, ifile, gadgetheader, ok)
         nparticles = gadgetheader%npart(2)
-        allocate(pos(3,nparticles)) ! ADD HERE?
+        allocate(pos(3,nparticles)) 
         allocate(vel(3,nparticles))
         allocate(ids(nparticles))
         TIME_START(clock_start)
@@ -1055,7 +1059,7 @@ subroutine load_gadget
              TIME_SPENT(clock_start, clock_end, clock_rate)
         start = 1
         TIME_START(clock_start)
-        do i=1,nparticles ! HERE?
+        do i=1,nparticles 
            xx_dp(1,1) = pos(1,i)/gadgetheader%boxsize
            xx_dp(1,2) = pos(2,i)/gadgetheader%boxsize
            xx_dp(1,3) = pos(3,i)/gadgetheader%boxsize
@@ -1070,7 +1074,7 @@ subroutine load_gadget
                  call clean_stop
               end if
 #endif
-              xp(ipart,1:3)=xx_dp(1,1:3) ! HERE?
+              xp(ipart,1:3)=xx_dp(1,1:3) 
               vp(ipart,1)  =vel(1, i) * gadgetvfact
               vp(ipart,2)  =vel(2, i) * gadgetvfact
               vp(ipart,3)  =vel(3, i) * gadgetvfact
@@ -1079,7 +1083,7 @@ subroutine load_gadget
               idp(ipart)   =ids(i)
 
               ! Get the particle type
-              typep(ipart)%family = FAM_DM ! ADD FAMILY HERE, OR MAKE OWN SUBROUTINE?
+              typep(ipart)%family = FAM_DM 
               typep(ipart)%tag    = 0
 #ifndef WITHOUTMPI
            endif
@@ -1093,8 +1097,98 @@ subroutine load_gadget
         deallocate(pos,vel,ids)
      end do
 
+  end if ! ferdig med lesing her, alt innenfor denne iftesaten maa kopieres og gjøre det samme for neutrinos under
+
+
+! add same thing as before, if(neutrinos)(...)
+! add initfile_neutrino so we can read it from input file
+! find out which factor we need to scale the mass and velocities/momentum
+! gadgetvfact og massparticles
+! ipart is OK 
+! put correct familily (and tag if we want to separate the three neutrinos)
+
+!!!!!!!!!!!!!!!!!!!!!!!
+!!!! READ NEUTRINOS!!!!
+!!!!!!!!!!!!!!!!!!!!!!!
+
+  if(.true.) then
+    write(*,*) 'hei'
+    exit
+    if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then ! initfile = fila vi skal lese, must add variable for neutrinos too
+      filename=TRIM(initfile_neutrinos(levelmin))
+      ! read first header to get information
+      call gadgetreadheader(filename, 0, gadgetheader, ok)
+      if(.not.ok) call clean_stop
+      numfiles = gadgetheader%numfiles
+      gadgetvfact = sqrt(aexp) / gadgetheader%boxsize * aexp / 100d0
+#ifndef LONGINT
+      allparticles=int(gadgetheader%nparttotal(2),kind=8)
+#else
+      allparticles=int(gadgetheader%nparttotal(2),kind=8) &
+          & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
+#endif
+      massparticles=1d0/dble(allparticles)
+      do ifile=0,numfiles-1
+        call gadgetreadheader(filename, ifile, gadgetheader, ok)
+        nparticles = gadgetheader%npart(2)
+        allocate(pos(3,nparticles)) 
+        allocate(vel(3,nparticles))
+        allocate(ids(nparticles))
+        TIME_START(clock_start)
+        call gadgetreadfile(filename,ifile,gadgetheader, pos, vel, ids)
+        TIME_END(clock_end)
+        if(debug) write(*,*) myid, ':Read ', nparticles, ' from gadget file ', ifile, ' in ', &
+             TIME_SPENT(clock_start, clock_end, clock_rate)
+        start = 1
+        TIME_START(clock_start)
+        do i=1,nparticles 
+           xx_dp(1,1) = pos(1,i)/gadgetheader%boxsize
+           xx_dp(1,2) = pos(2,i)/gadgetheader%boxsize
+           xx_dp(1,3) = pos(3,i)/gadgetheader%boxsize
+           ! add flip manual if particles from gevolution are outside box - ADD 2 AND 3 DIRECTION TOO?
+           if(xx_dp(1,1) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
+           if(xx_dp(1,1) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
+#ifndef WITHOUTMPI
+           call cmp_cpumap(xx_dp,cc,1)
+           if(cc(1)==myid)then
+#endif
+              ipart=ipart+1
+#ifndef WITHOUTMPI
+              if (ipart .ge. size(mp)) then
+                 write(*,*) "For ", myid, ipart, " exceeds ", size(mp)
+                 call clean_stop
+              end if
+#endif
+              xp(ipart,1:3)=xx_dp(1,1:3) 
+              vp(ipart,1)  =vel(1, i) * gadgetvfact
+              vp(ipart,2)  =vel(2, i) * gadgetvfact
+              vp(ipart,3)  =vel(3, i) * gadgetvfact
+              mp(ipart)    = massparticles
+              levelp(ipart)=levelmin
+              idp(ipart)   =ids(i)
+
+              ! Get the particle type
+              typep(ipart)%family = FAM_NEUTRINO 
+              typep(ipart)%tag    = 0
+#ifndef WITHOUTMPI
+           endif
+#endif
+        enddo
+#ifndef WITHOUTMPI
+        TIME_END(clock_end)
+        if(debug) write(*,*) myid, ':Processed ', nparticles, ' in ',&
+             &  TIME_SPENT(clock_start, clock_end, clock_rate), " ipart now ", ipart
+#endif
+        deallocate(pos,vel,ids)
+     end do
+
+    end if 
   end if
-  npart=ipart
+
+
+
+
+  npart=ipart ! total particle number is set
   ! Compute total number of particleclock_rate
   npart_cpu=0; npart_all=0
   npart_cpu(myid)=npart
