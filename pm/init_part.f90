@@ -1113,7 +1113,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
 
   if(.true.) then
     write(*,*) 'hei'
-    exit
+    !exit
     if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then ! initfile = fila vi skal lese, must add variable for neutrinos too
       filename=TRIM(initfile_neutrinos(levelmin))
       ! read first header to get information

@@ -322,6 +322,7 @@ subroutine read_params
      m_refine  (i)=m_refine  (i-levelmin+1)
      exp_refine(i)=exp_refine(i-levelmin+1)
      initfile  (i)=initfile  (i-levelmin+1)
+     initfile_neutrinos  (i)=initfile_neutrinos  (i-levelmin+1) !add neutrinos
   end do
   do i=1,levelmin-1
      nexpand   (i)= 1
