@@ -1148,6 +1148,10 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
            ! add flip manual if particles from gevolution are outside box - ADD 2 AND 3 DIRECTION TOO?
            if(xx_dp(1,1) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
            if(xx_dp(1,1) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
+           if(xx_dp(1,2) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
+           if(xx_dp(1,2) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
+           if(xx_dp(1,3) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
+           if(xx_dp(1,3) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
 #ifndef WITHOUTMPI
            call cmp_cpumap(xx_dp,cc,1)
            if(cc(1)==myid)then
