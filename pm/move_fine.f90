@@ -100,7 +100,7 @@ subroutine move_fine_static(ilevel)
                    & (.not. static_stars .and. is_not_DM(typep(ipart)) )  ) then                 
                  ! FIXME: there should be a static_sink as well
                  ! FIXME: what about debris?
-                 ! NEUTRINOS????
+                 ! NEUTRINOS?
                  npart2=npart2+1
               endif
            else
@@ -478,19 +478,11 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
           !D = 0.0D0
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
-              ! use boxlen_ini or boxlen? boxlen_ini = Mpc, boxlen = 1.0000
-              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
-              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)*h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
-              !write (*,*) 'neutrino'
            else ! DM
-              !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel)
-              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
-              !new_vp(j,idim)=vp(ind_part(j),idim)-(2.0D0*boxlen_ini**2*vp2(j)*h0**2 + aexp**2)/(aexp*sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*ff(j,idim)*0.5D0*dtnew(ilevel) ! relativistic update
+              !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
-              !rite (*,*) 'DM'
-              if (D > 1.0D0) then
-                !write(*,*) boxlen_ini**2*vp2(j)/(2997.9D0)**2/aexp**2
+              if (D > 1.0D0) then ! check if non-rel:
                 write(*,*) 'Relativistic parameter D in e.o.m: ',D
               endif
 

@@ -65,7 +65,6 @@
   end if
 
   ! Allocate particle variables
-  ! MAKE SURE NPARTMAX HAS ENOUGH FOR DM AND NEUTRINOS (OR DO WE PUT THEM SEPARATE?)
   allocate(xp    (npartmax,ndim))
   allocate(vp    (npartmax,ndim))
   allocate(mp    (npartmax))
@@ -207,7 +206,7 @@
      if(cosmo)then
         min_mdm_cpu = 1
         do ipart=1,npart2
-           ! Get dark matter only ! DO WE ALSO WANT NEUTRINOS? WHAT DOES THIS DO?
+           ! Get dark matter only ! 
            if (is_DM(typep(ipart))) then
               ! note: using two nested if so that the second one is only evaluated for DM particles
               if (mp(ipart) .lt. min_mdm_cpu) min_mdm_cpu = mp(ipart)
@@ -221,7 +220,7 @@
 #endif
         ilevel = 1
         do while(.true.)
-           mm1 = 0.5d0**(3*ilevel)*(1.0d0-omega_b/omega_m) ! DO WE HAVE TO ALTER OMEGA_M, OMEGA_DM OR OMEGA_NU?
+           mm1 = 0.5d0**(3*ilevel)*(1.0d0-omega_b/omega_m) 
            if((mm1 >  0.90d0*min_mdm_all).AND.(mm1 < 1.10d0*min_mdm_all))then
               nlevelmax_part = ilevel
               exit
@@ -369,7 +368,7 @@ contains
        !---------------------------------------------------------------------
        ! Second step: read initial condition file and set particle velocities
        !---------------------------------------------------------------------
-       ! Allocate initial conditions array ! NEED NEW ONE FOR NEUTRINOS, OR USE THE SAME?
+       ! Allocate initial conditions array 
        if(active(ilevel)%ngrid>0)then
           allocate(init_array(i1_min:i1_max,i2_min:i2_max,i3_min:i3_max))
           allocate(init_array_x(i1_min:i1_max,i2_min:i2_max,i3_min:i3_max))
@@ -616,7 +615,7 @@ contains
     ! Initial particle number
     npart=ipart
 
-    ! Move particle according to Zeldovich approximation ! NEUTRINOS INCLUDED HERE? AUTOMATIC?
+    ! Move particle according to Zeldovich approximation 
     if(.not. read_pos)then
        xp(1:npart,1:ndim)=xp(1:npart,1:ndim)+vp(1:npart,1:ndim)
     endif
@@ -692,7 +691,6 @@ contains
     call MPI_ALLTOALL(sendbuf,1,MPI_INTEGER,recvbuf,1,MPI_INTEGER,MPI_COMM_WORLD,info)
 
     ! Compute total number of newly created particles
-    ! NEUTRINOS AUTOMATICALLY IN THIS?
     npart_new=0
     do icpu=1,ncpu
        npart_new=npart_new+recvbuf(icpu)
@@ -796,7 +794,7 @@ contains
     ! Wait for full completion of sends
     call MPI_WAITALL(countsend,reqsend,statuses,info)
 
-    ! Create new particles ! ADD NEUTRINOS?
+    ! Create new particles 
     do icpu=1,ncpu
        do ibuf=1,recvbuf(icpu)
           jpart=jpart+1
@@ -846,15 +844,16 @@ contains
        levelp(ipart)=levelmin
     end do
 
-    ! Setup DM for all particles ! SETUP NEUTRINOS???
+    ! Setup DM for all particles 
     do ipart=1, npart
        typep(ipart)%family = FAM_DM
        
+       ! make half of the particles neutrinos for test
        !if (MOD(ipart,2) == 0) then
          !typep(ipart)%family = FAM_NEUTRINO
        !end if
 
-       typep(ipart)%tag = 0 ! GIVE NEUTRINOS DIFFERENT TAG, OR KEEP 0?
+       typep(ipart)%tag = 0 ! Give neutrinos different tag later if species separated?
     end do
 
     ! Compute particle initial age and metallicity
@@ -867,7 +866,7 @@ contains
        end do
     end if
 
-    ! Compute particle initial identity ! WHAT DOES THIS MEAN FOR NEUTRINOS?
+    ! Compute particle initial identity
     if(.not.read_ids) then
       npart_cpu=0; npart_all=0
       npart_cpu(myid)=npart
@@ -896,7 +895,7 @@ contains
   end subroutine load_grafic
 
   subroutine load_ascii
-    ! This function load from ASCII file. As is, you can only load dark matter particles ! ADD NEUTRINOS??
+    ! This function load from ASCII file. As is, you can only load dark matter particles 
     ! Local particle count
     ipart=0
 
@@ -914,7 +913,7 @@ contains
           if(myid==1)then
              jpart=0
              do i=1,nvector
-                read(10,*,end=111)xx1,xx2,xx3,vv1,vv2,vv3,mm1 ! DM ONLY, ADD NEUTRINOS?
+                read(10,*,end=111)xx1,xx2,xx3,vv1,vv2,vv3,mm1 
                 jpart=jpart+1
                 indglob=indglob+1
                 xx(i,1)=xx1+boxlen/2
@@ -925,9 +924,9 @@ contains
                 vv(i,3)=vv3
                 mm(i  )=mm1
                 ii(i  )=indglob
-                tmppart%family = FAM_DM ! HERE?
+                tmppart%family = FAM_DM 
                 tmppart%tag    = 0
-                pp(i  )=part2int(tmppart) ! THIS ONE ALSO? OR CHANGED IN OTHER FILE?
+                pp(i  )=part2int(tmppart) 
              end do
 111          continue
              if(jpart<nvector)eof=.true.
@@ -959,7 +958,7 @@ contains
                 mp(ipart)    = mm(i)
                 levelp(ipart)= levelmin
                 idp(ipart)   = ii(i)
-                ! Get back the particle type from the communicated ! CHANGE SOMETHING HERE??
+                ! Get back the particle type from the communicated 
                 ! shortened integer
                 typep(ipart) = int2part(pp(i))
 #ifndef WITHOUTMPI
@@ -997,7 +996,7 @@ end subroutine init_part
 #define TIME_END(ce) call SYSTEM_CLOCK(COUNT=ce)
 #define TIME_SPENT(cs,ce,cr) REAL((ce-cs)/cr)
 subroutine load_gadget ! modify routine to red neutrinos and cdm
-  ! This routine only creates DM particles ! ADD NEUTRINOS?
+  ! This routine only creates DM particles
   use amr_commons
   use pm_commons
   use gadgetreadfilemod
@@ -1032,7 +1031,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   !!!!!!!!READ DM!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!
 
-  if(TRIM(initfile(levelmin)).NE.' ')then ! initfile = fila vi skal lese, must add variable for neutrinos too
+  if(TRIM(initfile(levelmin)).NE.' ')then
      filename=TRIM(initfile(levelmin))
      ! read first header to get information
      call gadgetreadheader(filename, 0, gadgetheader, ok)
@@ -1097,7 +1096,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
         deallocate(pos,vel,ids)
      end do
 
-  end if ! ferdig med lesing her, alt innenfor denne iftesaten maa kopieres og gjøre det samme for neutrinos under
+  end if 
 
 
 ! add same thing as before, if(neutrinos)(...)
@@ -1114,7 +1113,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   if(.true.) then
     write(*,*) 'hei'
     !exit
-    if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then ! initfile = fila vi skal lese, must add variable for neutrinos too
+    if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then 
       filename=TRIM(initfile_neutrinos(levelmin))
       ! read first header to get information
       call gadgetreadheader(filename, 0, gadgetheader, ok)

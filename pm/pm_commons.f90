@@ -133,7 +133,6 @@ contains
     type(part_t), intent(in) :: typep
     is_not_DM = typep%family /= FAM_DM
   end function is_not_DM
-! ADD NEUTRINOS HERE LIKE OVER. ALSO IS_NOT_NEUTRINO?
 
   elemental logical pure function is_not_neutrino(typep)
     type(part_t), intent(in) :: typep
@@ -183,7 +182,7 @@ contains
     integer, intent(in)  :: idpii
 
     type(part_t) :: props2type
-    ! ADD NEUTRINOS HERE, BUT WHAT RANGE?
+    ! ADD NEUTRINOS HERE?
     if (tpii == 0) then
        props2type%family = FAM_DM
     else if (idpii > 0) then

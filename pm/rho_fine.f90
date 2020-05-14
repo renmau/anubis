@@ -251,7 +251,7 @@ subroutine rho_from_current_level(ilevel)
      ig=0
      ip=0
      do jgrid=1,numbl(icpu,ilevel)
-        npart1=numbp(igrid)  ! Number of particles in the grid ! NEUTRINOS IN HERE?
+        npart1=numbp(igrid)  ! Number of particles in the grid 
         if(npart1>0)then
            ig=ig+1
            ind_grid(ig)=igrid
@@ -384,7 +384,6 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
   end do
 
   ! Gather particle mass and family
-  ! NEUTRINOS AUTOMATICALLY INCLUDED???
   do j=1,np
      fam(j) = typep(ind_part(j))
      if (is_tracer(fam(j))) then
@@ -566,7 +565,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>cic_levelmax)then
         do j=1,np
-           ! check for non-DM (and non-tracer) !NEUTRINOS???
+           ! check for non-DM (and non-tracer) !NEUTRINOS?
            if ( ok(j) .and. is_not_DM(fam(j)) ) then
               rho(indp(j,ind))=rho(indp(j,ind))+vol2(j)
            end if
@@ -575,7 +574,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
 
      if(ilevel==cic_levelmax)then
         do j=1,np
-           ! check for DM ! NEUTRINOS PART OF DM?
+           ! check for DM ! SHOULD WE MAKE NEUTRINOS PART OF DM?
            if ( ok(j) .and. is_DM(fam(j)) ) then
               rho_top(indp(j,ind))=rho_top(indp(j,ind))+vol2(j)
            end if
@@ -1097,7 +1096,7 @@ subroutine cic_cell(ind_grid,ngrid,ilevel)
         end do
      end do
 
-     ! Update mass density and number density fields ! NEUTRINOS IN THIS ALREADY?
+     ! Update mass density and number density fields 
      do ind=1,twotondim
         do j=1,np
            ok(j)=igrid(j,ind)>0
@@ -1189,7 +1188,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
      end do
   end do
 
-  ! Gather particle mass & type !NEUTRINOS AUTOMATIC?
+  ! Gather particle mass & type 
   do j=1,np
      fam(j) = typep(ind_part(j))
      if (is_tracer(fam(j))) then
@@ -1370,7 +1369,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
      end do
   end do
 
-  ! Update mass density and number density fields ! NEUTRINOS AUTOMATIC?
+  ! Update mass density and number density fields 
   do ind=1,threetondim
 
      do j=1,np
@@ -1779,7 +1778,7 @@ subroutine tsc_cell(ind_grid,ngrid,ilevel)
         end do
      end do
 
-     ! Update mass density and number density fields !NEUTRINOS AUTOMATICALLY INCLUDED?
+     ! Update mass density and number density fields
      do ind=1,twotondim
         do j=1,np
            ok(j)=igrid(j,ind)>0
