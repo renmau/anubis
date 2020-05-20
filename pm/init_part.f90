@@ -1013,7 +1013,8 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   integer::ifile
   real,dimension(:,:),allocatable:: pos, vel
   real(dp)::massparticles
-  integer(kind=8)::allparticles
+  integer(kind=8)::allparticles_cdm
+  integer(kind=8)::allparticles_neutrinos
   integer(i8b),dimension(:),allocatable:: ids
   integer::nparticles
   integer::i,icpu,ipart,start
@@ -1022,6 +1023,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   real(dp),dimension(1:nvector,1:3)::xx_dp
   integer::clock_start,clock_end,clock_rate
   real(dp)::gadgetvfact
+  real(dp)::Omega_mnu
 
   ! Local particle count
   ipart=0
@@ -1039,12 +1041,12 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
      numfiles = gadgetheader%numfiles
      gadgetvfact = sqrt(aexp) / gadgetheader%boxsize * aexp / 100d0
 #ifndef LONGINT
-     allparticles=int(gadgetheader%nparttotal(2),kind=8)
+     allparticles_cdm=int(gadgetheader%nparttotal(2),kind=8) !ALL PARTICLES IS ONLY CDM SINCE CDM AND NEUTRINOS ARE IN SEPARATE FILES
 #else
-     allparticles=int(gadgetheader%nparttotal(2),kind=8) &
+     allparticles_cdm=int(gadgetheader%nparttotal(2),kind=8) &
           & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
 #endif
-     massparticles=1d0/dble(allparticles)
+     massparticles=1d0/dble(allparticles_cdm)
      do ifile=0,numfiles-1
         call gadgetreadheader(filename, ifile, gadgetheader, ok)
         nparticles = gadgetheader%npart(2)
@@ -1111,7 +1113,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
 !!!!!!!!!!!!!!!!!!!!!!!
 
   if(.true.) then
-    write(*,*) 'hei'
+    !write(*,*) 'hei'
     !exit
     if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then 
       filename=TRIM(initfile_neutrinos(levelmin))
@@ -1120,13 +1122,16 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
       if(.not.ok) call clean_stop
       numfiles = gadgetheader%numfiles
       gadgetvfact = sqrt(aexp) / gadgetheader%boxsize * aexp / 100d0
+      !gadgetvfact = 1d0 / (100d0 * gadgetheader%boxsize)
 #ifndef LONGINT
-      allparticles=int(gadgetheader%nparttotal(2),kind=8)
+      allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8)
 #else
-      allparticles=int(gadgetheader%nparttotal(2),kind=8) &
+      allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8) &
           & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
 #endif
-      massparticles=1d0/dble(allparticles)
+      !massparticles=1d0/dble(allparticles)
+      Omega_mnu = 0.00235d0
+      massparticles = (Omega_mnu/Omega_m)*(allparticles_cdm/allparticles_neutrinos) !!! which omega_m to use, omega_m og Omega_m?
       do ifile=0,numfiles-1
         call gadgetreadheader(filename, ifile, gadgetheader, ok)
         nparticles = gadgetheader%npart(2)
