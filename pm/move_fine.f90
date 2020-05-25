@@ -199,8 +199,9 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   integer ,dimension(1:nvector,1:twotondim),save::igrid,icell,indp,kg
   real(dp),dimension(1:3)::skip_loc
 
-  real(dp),allocatable,dimension(:)    ::vp2       ! q**2 for the new e.o.m with neutrinos
+  !real(dp),allocatable,dimension(:)    ::vp2       ! q**2 for the new e.o.m with neutrinos
   real(dp)::D                               ! will be used in e.o.m
+  real(dp)::vp2 ! q**2 for the new e.o.m with neutrinos
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
@@ -465,8 +466,8 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   endif
 
   ! Update velocity
-  allocate(vp2(np))
-  vp2(1:np) = vp(1:np,1)**2 + vp(1:np,2)**2 + vp(1:np,3)**2
+  !allocate(vp2(np))
+  !vp2(1:np) = vp(1:np,1)**2 + vp(1:np,2)**2 + vp(1:np,3)**2
   do idim=1,ndim
      if(static.or.tracer)then
         do j=1,np
@@ -474,7 +475,8 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
-          D = boxlen_ini**2*vp2(j)/(2997.92458D0)**2/aexp**2
+          vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
+          D   = (boxlen_ini/1000.0d0)**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
           !D = 0.0D0
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
@@ -482,7 +484,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
            else ! DM
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
-              if (D > 1.0D0) then ! check if non-rel:
+              if (D > 0.0001D0) then ! check if non-rel:
                 write(*,*) 'Relativistic parameter D in e.o.m: ',D
               endif
 
@@ -520,16 +522,13 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
-          D = boxlen_ini**2*vp2(j)/(2997.92458D0)**2/aexp**2
+          vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2 ! now the new velocity will be used for the positions?
+          D   = (boxlen_ini/1000.0d0)**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
-              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
-              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
               new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)/sqrt(D+1.0D0)*dtnew(ilevel)
            else 
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
-              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)/(2997.9D0)**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
-              !new_xp(j,idim)=xp(ind_part(j),idim)+aexp/(sqrt(boxlen_ini**2*vp2(j)*h0**2 + aexp**2))*new_vp(j,idim)*dtnew(ilevel) !relativistic
               new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)/sqrt(D+1.0D0)*dtnew(ilevel)
            endif
         end do
