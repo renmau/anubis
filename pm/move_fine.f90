@@ -476,7 +476,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      else
         do j=1,np
           vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
-          D   = (boxlen_ini/1000.0d0)**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
+          D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
           !D = 0.0D0
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
@@ -523,7 +523,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      else
         do j=1,np
           vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2 ! now the new velocity will be used for the positions?
-          D   = (boxlen_ini/1000.0d0)**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
+          D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
               new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)/sqrt(D+1.0D0)*dtnew(ilevel)

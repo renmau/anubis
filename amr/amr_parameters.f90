@@ -254,6 +254,10 @@ module amr_parameters
 
   ! Initial condition files for each level
   logical::multiple=.false.
+  ! The ratio of Mpc/h / GadgetPosUnit so 1.0 if the file is in Mpc/h and 1000.0
+  ! if its in kpc/h
+  real(dp) :: gadgetpos_fac = 1.0d0
+  real(dp) :: Omega_mnu = 0.0d0
   character(LEN=80),dimension(1:MAXLEVEL)::initfile=' '
   character(LEN=80),dimension(1:MAXLEVEL)::initfile_neutrinos=' '
   character(LEN=20)::filetype='ascii'

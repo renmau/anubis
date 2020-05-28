@@ -522,7 +522,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         do j=1,np !have to add neutrino test here? Not necessary yet
            !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !CHANGE HERE AS BEFORE
            vpp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
-           DDD = (boxlen_ini/1000.d0)**2*vpp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
+           DDD = boxlen_ini**2*vpp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
            new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*DDD+1.0D0)/sqrt(DDD+1.0D0)*ff(j,idim)*0.5D0*dteff(j)
         end do
      endif

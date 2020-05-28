@@ -41,7 +41,7 @@ CONTAINS
 !
 ! Read and return the gadget file header for the specified file
 !
-
+    use amr_parameters,only:gadgetpos_fac
 #ifndef WITHOUTMPI
     use amr_commons,only:myid,IOGROUPSIZE,ncpu
 #endif
@@ -104,6 +104,9 @@ CONTAINS
          header%flag_ic_info, header%lpt_scalingfactor
     CLOSE(1)
 
+    ! Transform to Mpc/h in case the file uses other units for positions
+    header%boxsize = header%boxsize / gadgetpos_fac
+
     ! Send the token
 #ifndef WITHOUTMPI
     if(IOGROUPSIZE>0) then
@@ -125,6 +128,7 @@ CONTAINS
 ! Read and return all data from the specified file. Output arrays must
 ! already be allocated. Use readheader to get particle numbers to do this.
 !
+    use amr_parameters,only:gadgetpos_fac
 #ifndef WITHOUTMPI
     use amr_commons,only:myid,IOGROUPSIZE,ncpu
 #endif
@@ -199,6 +203,10 @@ CONTAINS
     READ(1)vel(1:3,1:np)
     READ(1)id(1:np)
     CLOSE(1)
+
+    ! Transform to Mpc/h in case the file uses other units for positions
+    header%boxsize = header%boxsize / gadgetpos_fac
+    pos(1:3,1:np) = pos(1:3,1:np) / gadgetpos_fac
 
     ! Send the token
 #ifndef WITHOUTMPI
