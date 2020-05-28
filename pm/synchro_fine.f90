@@ -235,9 +235,9 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   real(dp),dimension(1:nvector,1:twotondim),save::vol
   integer ,dimension(1:nvector,1:twotondim),save::igrid,icell,indp,kg
   real(dp),dimension(1:3)::skip_loc
-  !real(dp),allocatable,dimension(:)    ::vpp2       ! q**2 for the new e.o.m with neutrinos
-  real(dp)::DDD 
-  real(dp)::vpp2
+
+  real(dp)::DDD    ! will be used in e.o.m as relativistic parameter
+  real(dp)::vpp2   ! q**2 for the new e.o.m with neutrinos
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
@@ -510,9 +510,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      levelp(ind_part(j))=ilevel
   end do
 
-  ! Update 3-velocity
-  !allocate(vpp2(np))
-  !vpp2(1:np) = vp(1:np,1)**2 + vp(1:np,2)**2 + vp(1:np,3)**2
+
   do idim=1,ndim
      if(static)then
         do j=1,np
@@ -520,9 +518,9 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np !have to add neutrino test here? Not necessary yet
-           !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !CHANGE HERE AS BEFORE
+           !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !newtonian
            vpp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
-           DDD = boxlen_ini**2*vpp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
+           DDD = boxlen_ini**2*vpp2/(2997.92458D0)**2/aexp**2 
            new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*DDD+1.0D0)/sqrt(DDD+1.0D0)*ff(j,idim)*0.5D0*dteff(j)
         end do
      endif

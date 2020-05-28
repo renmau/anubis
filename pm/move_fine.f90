@@ -199,8 +199,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   integer ,dimension(1:nvector,1:twotondim),save::igrid,icell,indp,kg
   real(dp),dimension(1:3)::skip_loc
 
-  !real(dp),allocatable,dimension(:)    ::vp2       ! q**2 for the new e.o.m with neutrinos
-  real(dp)::D                               ! will be used in e.o.m
+  real(dp)::D   ! will be used in e.o.m as relativistic parameter
   real(dp)::vp2 ! q**2 for the new e.o.m with neutrinos
 
   ! Mesh spacing in that level
@@ -465,9 +464,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      end do
   endif
 
-  ! Update velocity
-  !allocate(vp2(np))
-  !vp2(1:np) = vp(1:np,1)**2 + vp(1:np,2)**2 + vp(1:np,3)**2
+
   do idim=1,ndim
      if(static.or.tracer)then
         do j=1,np
@@ -476,8 +473,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      else
         do j=1,np
           vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
-          D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
-          !D = 0.0D0
+          D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
@@ -522,8 +518,8 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         end do
      else
         do j=1,np
-          vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2 ! now the new velocity will be used for the positions?
-          D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 ! divide boxlen_ini by 1000 when we use gadgetfiles from gevolution, since their boxlen is given in kpc/h instead of Mpc/h as is used in RAMSES
+          vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
+          D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 
            if (is_neutrino(typep(ind_part(j)))) then !neutrinos
               !new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)*dtnew(ilevel) !newtonian
               new_xp(j,idim)=xp(ind_part(j),idim)+new_vp(j,idim)/sqrt(D+1.0D0)*dtnew(ilevel)
@@ -539,7 +535,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
         xp(ind_part(j),idim)=new_xp(j,idim)
      end do
   end do
-  !write(*,*) xp(5,1)
+  
 
 end subroutine move1
 !#########################################################################
