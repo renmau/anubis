@@ -93,7 +93,7 @@ subroutine newdt_fine(ilevel)
               ! Loop over particles
               ipart=headp(igrid)
               do jpart=1,npart1 
-                if (is_not_neutrino(typep(ipart))) then ! .OR. is_neutrino(typep(ipart))) then ! sorting out neutrinos
+                !if (is_not_neutrino(typep(ipart))) then!.OR. is_neutrino(typep(ipart))) then ! sorting out neutrinos
                   !write(*,*) typep(ipart)
                   ip=ip+1
                   ind_part(ip)=ipart
@@ -102,7 +102,7 @@ subroutine newdt_fine(ilevel)
                       ip=0
                   end if
                   ipart=nextp(ipart)    ! Go to next particle
-                end if
+                !end if
               end do
               ! End loop over particles
            end if
