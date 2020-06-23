@@ -93,16 +93,31 @@ subroutine newdt_fine(ilevel)
               ! Loop over particles
               ipart=headp(igrid)
               do jpart=1,npart1 
-                !if (is_not_neutrino(typep(ipart))) then!.OR. is_neutrino(typep(ipart))) then ! sorting out neutrinos
-                  !write(*,*) typep(ipart)
-                  ip=ip+1
-                  ind_part(ip)=ipart
-                  if(ip==nvector)then
+                !write(*,*) neutrino_timestep
+                if (neutrino_timestep) then
+                   
+                   !write(*,*) typep(ipart)
+                   ip=ip+1
+                   ind_part(ip)=ipart
+                   if(ip==nvector)then
                       call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel)
                       ip=0
-                  end if
-                  ipart=nextp(ipart)    ! Go to next particle
-                !end if
+                   end if
+                   ipart=nextp(ipart)    ! Go to next particle
+                 
+                else
+                   if (is_not_neutrino(typep(ipart))) then ! sorting out neutrinos
+                     ! write(*,*)'hei'
+                      ip=ip+1
+                      ind_part(ip)=ipart
+                      if(ip==nvector)then
+                         call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel)
+                         ip=0
+                      end if
+                      ipart=nextp(ipart)    ! Go to next particle
+                   endif
+                endif
+
               end do
               ! End loop over particles
            end if

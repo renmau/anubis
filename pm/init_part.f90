@@ -1118,85 +1118,83 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
 !!!! READ NEUTRINOS!!!!
 !!!!!!!!!!!!!!!!!!!!!!!
 
-!!$  if(.true.) then
-!!$    !write(*,*) 'hei'
-!!$    !exit
-!!$    if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then 
-!!$      filename=TRIM(initfile_neutrinos(levelmin))
-!!$      ! read first header to get information
-!!$      call gadgetreadheader(filename, 0, gadgetheader, ok)
-!!$      if(.not.ok) call clean_stop
-!!$      numfiles = gadgetheader%numfiles
-!!$      gadgetvfact = sqrt(aexp) / (gadgetheader%boxsize) * aexp / 100d0 
-!!$#ifndef LONGINT
-!!$      allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8)
-!!$#else
-!!$      allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8) &
-!!$          & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
-!!$#endif
-!!$      massparticles = (Omega_mnu/Omega_m)/dble(allparticles_neutrinos)
-!!$      do ifile=0,numfiles-1
-!!$        call gadgetreadheader(filename, ifile, gadgetheader, ok)
-!!$        nparticles = gadgetheader%npart(2)
-!!$        allocate(pos(3,nparticles)) 
-!!$        allocate(vel(3,nparticles))
-!!$        allocate(ids(nparticles))
-!!$        TIME_START(clock_start)
-!!$        call gadgetreadfile(filename,ifile,gadgetheader, pos, vel, ids)
-!!$        TIME_END(clock_end)
-!!$        if(debug) write(*,*) myid, ':Read ', nparticles, ' from gadget file ', ifile, ' in ', &
-!!$             TIME_SPENT(clock_start, clock_end, clock_rate)
-!!$        start = 1
-!!$        TIME_START(clock_start)
-!!$        do i=1,nparticles 
-!!$           xx_dp(1,1) = pos(1,i)/gadgetheader%boxsize
-!!$           xx_dp(1,2) = pos(2,i)/gadgetheader%boxsize
-!!$           xx_dp(1,3) = pos(3,i)/gadgetheader%boxsize
-!!$           ! add flip manual if particles from gevolution are outside box
-!!$           if(xx_dp(1,1) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
-!!$           if(xx_dp(1,1) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
-!!$           if(xx_dp(1,2) < 0.0) xx_dp(1,2) = xx_dp(1,2) + 1.0d0
-!!$           if(xx_dp(1,2) > 1.0) xx_dp(1,2) = xx_dp(1,2) - 1.0d0
-!!$           if(xx_dp(1,3) < 0.0) xx_dp(1,3) = xx_dp(1,3) + 1.0d0
-!!$           if(xx_dp(1,3) > 1.0) xx_dp(1,3) = xx_dp(1,3) - 1.0d0
-!!$#ifndef WITHOUTMPI
-!!$           call cmp_cpumap(xx_dp,cc,1)
-!!$           if(cc(1)==myid)then
-!!$#endif
-!!$              ipart=ipart+1
-!!$#ifndef WITHOUTMPI
-!!$              if (ipart .ge. size(mp)) then
-!!$                 write(*,*) "For ", myid, ipart, " exceeds ", size(mp)
-!!$                 call clean_stop
-!!$              end if
-!!$#endif
-!!$              xp(ipart,1:3)=xx_dp(1,1:3) 
-!!$              vnorm = sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2)*sqrt(aexp)/2.99792458d5
-!!$              vnorm = 1.0d0/sqrt(1.0d0 - vnorm*vnorm)
-!!$              vp(ipart,1)  =vel(1, i) * gadgetvfact * vnorm !*0.0d0
-!!$              vp(ipart,2)  =vel(2, i) * gadgetvfact * vnorm !*0.0d0
-!!$              vp(ipart,3)  =vel(3, i) * gadgetvfact * vnorm !*0.0d0
-!!$              mp(ipart)    = massparticles
-!!$              levelp(ipart)=levelmin
-!!$              idp(ipart)   =ids(i)
-!!$
-!!$              ! Get the particle type
-!!$              typep(ipart)%family = FAM_NEUTRINO 
-!!$              typep(ipart)%tag    = 0
-!!$#ifndef WITHOUTMPI
-!!$           endif
-!!$#endif
-!!$        enddo
-!!$#ifndef WITHOUTMPI
-!!$        TIME_END(clock_end)
-!!$        if(debug) write(*,*) myid, ':Processed ', nparticles, ' in ',&
-!!$             &  TIME_SPENT(clock_start, clock_end, clock_rate), " ipart now ", ipart
-!!$#endif
-!!$        deallocate(pos,vel,ids)
-!!$     end do
-!!$
-!!$    end if 
-!!$  end if
+  if(neutrinos) then
+    if(TRIM(initfile_neutrinos(levelmin)).NE.' ')then 
+      filename=TRIM(initfile_neutrinos(levelmin))
+      ! read first header to get information
+      call gadgetreadheader(filename, 0, gadgetheader, ok)
+      if(.not.ok) call clean_stop
+      numfiles = gadgetheader%numfiles
+      gadgetvfact = sqrt(aexp) / (gadgetheader%boxsize) * aexp / 100d0 
+#ifndef LONGINT
+      allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8)
+#else
+      allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8) &
+          & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
+#endif
+      massparticles = (Omega_mnu/Omega_m)/dble(allparticles_neutrinos)
+      do ifile=0,numfiles-1
+        call gadgetreadheader(filename, ifile, gadgetheader, ok)
+        nparticles = gadgetheader%npart(2)
+        allocate(pos(3,nparticles)) 
+        allocate(vel(3,nparticles))
+        allocate(ids(nparticles))
+        TIME_START(clock_start)
+        call gadgetreadfile(filename,ifile,gadgetheader, pos, vel, ids)
+        TIME_END(clock_end)
+        if(debug) write(*,*) myid, ':Read ', nparticles, ' from gadget file ', ifile, ' in ', &
+             TIME_SPENT(clock_start, clock_end, clock_rate)
+        start = 1
+        TIME_START(clock_start)
+        do i=1,nparticles 
+           xx_dp(1,1) = pos(1,i)/gadgetheader%boxsize
+           xx_dp(1,2) = pos(2,i)/gadgetheader%boxsize
+           xx_dp(1,3) = pos(3,i)/gadgetheader%boxsize
+           ! add flip manual if particles from gevolution are outside box
+           if(xx_dp(1,1) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
+           if(xx_dp(1,1) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
+           if(xx_dp(1,2) < 0.0) xx_dp(1,2) = xx_dp(1,2) + 1.0d0
+           if(xx_dp(1,2) > 1.0) xx_dp(1,2) = xx_dp(1,2) - 1.0d0
+           if(xx_dp(1,3) < 0.0) xx_dp(1,3) = xx_dp(1,3) + 1.0d0
+           if(xx_dp(1,3) > 1.0) xx_dp(1,3) = xx_dp(1,3) - 1.0d0
+#ifndef WITHOUTMPI
+           call cmp_cpumap(xx_dp,cc,1)
+           if(cc(1)==myid)then
+#endif
+              ipart=ipart+1
+#ifndef WITHOUTMPI
+              if (ipart .ge. size(mp)) then
+                 write(*,*) "For ", myid, ipart, " exceeds ", size(mp)
+                 call clean_stop
+              end if
+#endif
+              xp(ipart,1:3)=xx_dp(1,1:3) 
+              vnorm = sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2)*sqrt(aexp)/2.99792458d5
+              vnorm = 1.0d0/sqrt(1.0d0 - vnorm*vnorm)
+              vp(ipart,1)  =vel(1, i) * gadgetvfact * vnorm !*0.0d0
+              vp(ipart,2)  =vel(2, i) * gadgetvfact * vnorm !*0.0d0
+              vp(ipart,3)  =vel(3, i) * gadgetvfact * vnorm !*0.0d0
+              mp(ipart)    = massparticles
+              levelp(ipart)=levelmin
+              idp(ipart)   =ids(i)
+
+              ! Get the particle type
+              typep(ipart)%family = FAM_NEUTRINO 
+              typep(ipart)%tag    = 0
+#ifndef WITHOUTMPI
+           endif
+#endif
+        enddo
+#ifndef WITHOUTMPI
+        TIME_END(clock_end)
+        if(debug) write(*,*) myid, ':Processed ', nparticles, ' in ',&
+             &  TIME_SPENT(clock_start, clock_end, clock_rate), " ipart now ", ipart
+#endif
+        deallocate(pos,vel,ids)
+     end do
+
+    end if 
+  end if
 
 
 
@@ -1217,5 +1215,9 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
      npart_cpu(icpu)=npart_cpu(icpu-1)+npart_all(icpu)
   end do
   write(*,*)'npart=',npart,'/',npartmax
+  if (npart > npartmax) then
+     write(*,*)'npart > npartmax'
+     call clean_stop
+  endif
 
 end subroutine load_gadget

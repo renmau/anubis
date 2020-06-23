@@ -258,6 +258,8 @@ module amr_parameters
   ! if its in kpc/h
   real(dp) :: gadgetpos_fac = 1.0d0
   real(dp) :: Omega_mnu = 0.0d0
+  logical  :: neutrino_timestep = .false.
+  logical  :: neutrinos = .false.
   character(LEN=80),dimension(1:MAXLEVEL)::initfile=' '
   character(LEN=80),dimension(1:MAXLEVEL)::initfile_neutrinos=' '
   character(LEN=20)::filetype='ascii'
