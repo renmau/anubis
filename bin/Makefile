@@ -20,8 +20,8 @@ PATCH =
 # Use RT? 1=Yes, 0=No
 RT = 0
 # Use MPI? 1=Yes, 0=No
-MPI = 1 #0
-MPIF90 = mpif90
+MPI = 1
+MPIF90 = mpiifort
 # Root name of executable
 EXEC = ramses
 # Number of additional energies
