@@ -15,6 +15,8 @@ subroutine move_fine(ilevel)
   !parameters for printing/testing:
   integer :: counter_nu, counter_dm
   real(dp):: v_rms_nu, v_rms_dm
+
+  COMMON/printing/counter_nu, counter_dm, v_rms_nu, v_rms_dm
   !initialize:
   counter_nu = 0
   counter_dm = 0
@@ -49,7 +51,8 @@ subroutine move_fine(ilevel)
            !write(*,*) typep(ipart)%family
            ind_grid_part(ip)=ig
            if(ip==nvector)then
-              call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel,counter_nu,counter_dm,v_rms_nu,v_rms_dm) ! HERE PARTICLES GET MOVED FORWARD
+              ! HERE PARTICLES GET MOVED FORWARD
+              call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
               ip=0
               ig=0
            end if
@@ -62,7 +65,7 @@ subroutine move_fine(ilevel)
   ! End loop over grids
   if(ip>0)call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
 
-  ! fix print variables since they are looped through three dimensions
+  !fix print variables since they are looped through three dimensions
   if (neutrinos) then
      counter_nu = counter_nu/3
      v_rms_nu   = v_rms_nu/3.0d0
@@ -191,7 +194,7 @@ end subroutine move_fine_static
 !#########################################################################
 !#########################################################################
 !#########################################################################
-subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,counter_nu,counter_dm,v_rms_nu,v_rms_dm)
+subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   use amr_commons
   use pm_commons
   use poisson_commons
@@ -229,11 +232,8 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,counter_nu,counter
   ! parameters for printing/testing:
   integer :: counter_nu, counter_dm
   real(dp):: v_rms_nu, v_rms_dm
-  ! initialize:
-  !counter_nu = 0
-  !counter_dm = 0
-  !v_rms_nu   = 0.0d0
-  !v_rms_dm   = 0.0d0
+
+  COMMON/printing/counter_nu, counter_dm, v_rms_nu, v_rms_dm
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
