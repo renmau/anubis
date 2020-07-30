@@ -15,6 +15,8 @@ subroutine move_fine(ilevel)
   !parameters for printing/testing:
   integer :: counter_nu, counter_dm
   real(dp):: v_rms_nu, v_rms_dm
+
+  COMMON/printing/counter_nu, counter_dm, v_rms_nu, v_rms_dm
   !initialize:
   counter_nu = 0
   counter_dm = 0
@@ -49,7 +51,8 @@ subroutine move_fine(ilevel)
            !write(*,*) typep(ipart)%family
            ind_grid_part(ip)=ig
            if(ip==nvector)then
-              call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel,counter_nu,counter_dm,v_rms_nu,v_rms_dm) ! HERE PARTICLES GET MOVED FORWARD
+              ! HERE PARTICLES GET MOVED FORWARD
+              call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
               ip=0
               ig=0
            end if
@@ -62,7 +65,7 @@ subroutine move_fine(ilevel)
   ! End loop over grids
   if(ip>0)call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
 
-  ! fix print variables since they are looped through three dimensions
+  !fix print variables since they are looped through three dimensions
   if (neutrinos) then
      counter_nu = counter_nu/3
      v_rms_nu   = v_rms_nu/3.0d0
@@ -191,7 +194,7 @@ end subroutine move_fine_static
 !#########################################################################
 !#########################################################################
 !#########################################################################
-subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,counter_nu,counter_dm,v_rms_nu,v_rms_dm)
+subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   use amr_commons
   use pm_commons
   use poisson_commons
@@ -229,11 +232,8 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,counter_nu,counter
   ! parameters for printing/testing:
   integer :: counter_nu, counter_dm
   real(dp):: v_rms_nu, v_rms_dm
-  ! initialize:
-  !counter_nu = 0
-  !counter_dm = 0
-  !v_rms_nu   = 0.0d0
-  !v_rms_dm   = 0.0d0
+
+  COMMON/printing/counter_nu, counter_dm, v_rms_nu, v_rms_dm
 
   ! Mesh spacing in that level
   dx=0.5D0**ilevel
@@ -506,10 +506,14 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel,counter_nu,counter
      else
         do j=1,np
           vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
+          !write(*,*) vp2
           D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               counter_nu = counter_nu + 1
               v_rms_nu   = v_rms_nu + vp2/(aexp*(aexp**2/(boxlen_ini**2*100d0**2) + vp2/2.99792458d5**2))!make into actual v, instead of q/m
+              !if (isnan(v_rms_nu).AND. counter_nu.NE.0) then
+                 !write(*,*) vp2
+              !endif
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
            else ! DM

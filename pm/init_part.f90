@@ -1029,7 +1029,11 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
 
   ! Omega values
   !Omega_mnu = 0.00235d0
-  Omega_cdm = Omega_m - Omega_mnu
+  if (neutrinos) then
+     Omega_cdm = Omega_m - Omega_mnu
+  else
+     Omega_cdm = omega_m
+  endif
 
   ! Local particle count
   ipart=0
@@ -1052,7 +1056,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
      allparticles_cdm=int(gadgetheader%nparttotal(2),kind=8) &
           & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
 #endif
-     massparticles = (Omega_m-Omega_mnu)/Omega_m * 1d0/dble(allparticles_cdm)
+     massparticles = Omega_cdm/omega_m * 1d0/dble(allparticles_cdm)
      do ifile=0,numfiles-1
         call gadgetreadheader(filename, ifile, gadgetheader, ok)
         nparticles = gadgetheader%npart(2)
@@ -1132,7 +1136,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
       allparticles_neutrinos=int(gadgetheader%nparttotal(2),kind=8) &
           & +int(gadgetheader%totalhighword(2),kind=8)*4294967296_i8b !2^32
 #endif
-      massparticles = (Omega_mnu/Omega_m)/dble(allparticles_neutrinos)
+      massparticles = (Omega_mnu/omega_m)/dble(allparticles_neutrinos)
       do ifile=0,numfiles-1
         call gadgetreadheader(filename, ifile, gadgetheader, ok)
         nparticles = gadgetheader%npart(2)
@@ -1170,10 +1174,17 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
 #endif
               xp(ipart,1:3)=xx_dp(1,1:3) 
               vnorm = sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2)*sqrt(aexp)/2.99792458d5
+              if (vnorm*vnorm > 1.0d0) then
+                write(*,*) sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2), aexp, vnorm, (1.0d0- vnorm*vnorm)
+              endif
               vnorm = 1.0d0/sqrt(1.0d0 - vnorm*vnorm)
+              !write(*,*) vel(1,i),gadgetvfact,vnorm
               vp(ipart,1)  =vel(1, i) * gadgetvfact * vnorm !*0.0d0
               vp(ipart,2)  =vel(2, i) * gadgetvfact * vnorm !*0.0d0
               vp(ipart,3)  =vel(3, i) * gadgetvfact * vnorm !*0.0d0
+              !if (isnan(vp(ipart,1)) .OR. isnan(vp(ipart,2)) .OR. isnan(vp(ipart,3))) then
+               ! write(*,*)  vel(1,i), vel(2,i), vel(3,i), vnorm
+              !endif
               mp(ipart)    = massparticles
               levelp(ipart)=levelmin
               idp(ipart)   =ids(i)
