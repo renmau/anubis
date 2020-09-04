@@ -75,11 +75,12 @@ subroutine move_fine(ilevel)
      v_rms_dm   = sqrt(v_rms_dm/counter_dm)/2.99792458d5
      write(*,*)'Neutrinos:  ',' #:',counter_nu,' v_rms:',v_rms_nu,'timestep:',neutrino_timestep
      write(*,*)'Dark Matter:',' #:',counter_dm,' v_rms:',v_rms_dm
+     !write(*,*) ilevel
   else
      counter_dm = counter_dm/3
      v_rms_dm   = v_rms_dm/3.0d0
      v_rms_dm   = sqrt(v_rms_dm/counter_dm)/2.99792458d5
-     write(*,*)'Dark Matter:',' #:',counter_dm,' v_rms:',v_rms_dm
+     write(*,*)'Dark Matter:',' #:',counter_dm,' v_rms:',v_rms_dm, 'level:',ilevel
   endif
 
 111 format('   Entering move_fine for level ',I2)
@@ -230,7 +231,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
   real(dp)::vp2 ! q**2 for the new e.o.m with neutrinos
 
   ! parameters for printing/testing:
-  integer :: counter_nu, counter_dm
+  integer :: counter_nu, counter_dm, dim
   real(dp):: v_rms_nu, v_rms_dm
 
   COMMON/printing/counter_nu, counter_dm, v_rms_nu, v_rms_dm
@@ -506,14 +507,10 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
      else
         do j=1,np
           vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
-          !write(*,*) vp2
           D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
               counter_nu = counter_nu + 1
               v_rms_nu   = v_rms_nu + vp2/(aexp*(aexp**2/(boxlen_ini**2*100d0**2) + vp2/2.99792458d5**2))!make into actual v, instead of q/m
-              !if (isnan(v_rms_nu).AND. counter_nu.NE.0) then
-                 !write(*,*) vp2
-              !endif
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
            else ! DM

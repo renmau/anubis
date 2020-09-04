@@ -54,7 +54,7 @@ subroutine newdt_fine(ilevel)
      dtnew(ilevel)=MIN(dtnew(ilevel),courant_factor*tff)
   end if
   if(cosmo)then
-     dtnew(ilevel)=MIN(dtnew(ilevel),0.1d0/hexp) 
+     dtnew(ilevel)=MIN(dtnew(ilevel),0.1d0/hexp)
   end if
 
 #ifdef ATON
@@ -92,32 +92,14 @@ subroutine newdt_fine(ilevel)
            if(npart1>0)then
               ! Loop over particles
               ipart=headp(igrid)
-              do jpart=1,npart1 
-                !write(*,*) neutrino_timestep
-                if (neutrino_timestep) then
-                   
-                   !write(*,*) typep(ipart)
-                   ip=ip+1
-                   ind_part(ip)=ipart
-                   if(ip==nvector)then
-                      call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel)
-                      ip=0
-                   end if
-                   ipart=nextp(ipart)    ! Go to next particle
-                 
-                else
-                   if (is_not_neutrino(typep(ipart))) then ! sorting out neutrinos
-                     ! write(*,*)'hei'
-                      ip=ip+1
-                      ind_part(ip)=ipart
-                      if(ip==nvector)then
-                         call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel)
-                         ip=0
-                      end if
-                      ipart=nextp(ipart)    ! Go to next particle
-                   endif
-                endif
-
+              do jpart=1,npart1
+                 ip=ip+1
+                 ind_part(ip)=ipart
+                 if(ip==nvector)then
+                    call newdt2(ind_part,dt_loc,ekin_loc,ip,ilevel)
+                    ip=0
+                 end if
+                 ipart=nextp(ipart)    ! Go to next particle
               end do
               ! End loop over particles
            end if
@@ -166,7 +148,7 @@ subroutine newdt2(ind_part,dt_loc,ekin_loc,nn,ilevel)
   real(dp),dimension(1:nvector),save::v2,mmm
   real(dp),dimension(1:nvector,1:ndim)::vvv
 
-  ! Compute time step 
+  ! Compute time step
   dx=0.5D0**ilevel
   nx_loc=(icoarse_max-icoarse_min+1)
   scale=boxlen/dble(nx_loc)
@@ -187,7 +169,7 @@ subroutine newdt2(ind_part,dt_loc,ekin_loc,nn,ilevel)
      end if
   end do
 
-  ! Fetch mass 
+  ! Fetch mass
   do i = 1, nn
      mmm(i) = mp(ind_part(i))
   end do
@@ -195,7 +177,7 @@ subroutine newdt2(ind_part,dt_loc,ekin_loc,nn,ilevel)
   ! Compute kinetic energy
   do idim=1,ndim
      do i=1,nn
-        ekin_loc=ekin_loc+0.5D0*mmm(i)*vvv(i, idim)**2 ! SHOULD BE RELATIVISTIC FOR NEUTRINOS?
+        ekin_loc=ekin_loc+0.5D0*mmm(i)*vvv(i, idim)**2
      end do
   end do
 

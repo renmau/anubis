@@ -1028,11 +1028,10 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   real(dp)::vnorm
 
   ! Omega values
-  !Omega_mnu = 0.00235d0
   if (neutrinos) then
      Omega_cdm = Omega_m - Omega_mnu
   else
-     Omega_cdm = omega_m
+     Omega_cdm = Omega_m
   endif
 
   ! Local particle count
@@ -1111,13 +1110,6 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   end if 
 
 
-! add same thing as before, if(neutrinos)(...)
-! add initfile_neutrino so we can read it from input file
-! find out which factor we need to scale the mass and velocities/momentum
-! gadgetvfact og massparticles
-! ipart is OK 
-! put correct familily (and tag if we want to separate the three neutrinos)
-
 !!!!!!!!!!!!!!!!!!!!!!!
 !!!! READ NEUTRINOS!!!!
 !!!!!!!!!!!!!!!!!!!!!!!
@@ -1173,28 +1165,21 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
               end if
 #endif
               xp(ipart,1:3)=xx_dp(1,1:3) 
-              vnorm = sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2)*sqrt(aexp)/2.99792458d5
-              !if (vnorm*vnorm > 1.0d0) then
-               ! write(*,*) sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2), aexp, vnorm, (1.0d0- vnorm*vnorm)
-              !endif
-              !if (vnorm>0.6d0) then
-                ! write(*,*) vnorm
-              !endif
+              !vnorm = sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2)*sqrt(aexp)/2.99792458d5
               !vnorm = 1.0d0/sqrt(1.0d0 - vnorm*vnorm)
-              !write(*,*) vel(1,i),gadgetvfact,vnorm
-              vp(ipart,1)  =vel(1, i) * gadgetvfact !* vnorm !*0.0d0
-              vp(ipart,2)  =vel(2, i) * gadgetvfact !* vnorm !*0.0d0
-              vp(ipart,3)  =vel(3, i) * gadgetvfact !* vnorm !*0.0d0
-              !if (isnan(vp(ipart,1)) .OR. isnan(vp(ipart,2)) .OR. isnan(vp(ipart,3))) then
-               ! write(*,*)  vel(1,i), vel(2,i), vel(3,i), vnorm
-              !endif
+              
+              vp(ipart,1)  =vel(1, i) * gadgetvfact!* vnorm 
+              vp(ipart,2)  =vel(2, i) * gadgetvfact!* vnorm 
+              vp(ipart,3)  =vel(3, i) * gadgetvfact!* vnorm
+              
               mp(ipart)    = massparticles
+              !write(*,*) mp(ipart)
               levelp(ipart)=levelmin
               idp(ipart)   =ids(i)
 
               ! Get the particle type
               typep(ipart)%family = FAM_NEUTRINO 
-              typep(ipart)%tag    = 0
+              typep(ipart)%tag    = 0 ! should be 0 or 6? do I have to add neutrinos in counter and specify tag?
 #ifndef WITHOUTMPI
            endif
 #endif
