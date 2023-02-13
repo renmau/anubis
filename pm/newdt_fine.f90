@@ -124,7 +124,7 @@ subroutine newdt_fine(ilevel)
      dtnew(ilevel)=MIN(dtnew(ilevel),dt_all)
 
   end if
-
+  !dtnew(ilevel)=0.1d0*dtnew(ilevel) ! change time-step manually if we want to
   if(hydro)call courant_fine(ilevel)
 
 111 format('   Entering newdt_fine for level ',I2)

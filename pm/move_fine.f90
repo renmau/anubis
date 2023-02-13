@@ -48,7 +48,6 @@ subroutine move_fine(ilevel)
            end if
            ip=ip+1
            ind_part(ip)=ipart
-           !write(*,*) typep(ipart)%family
            ind_grid_part(ip)=ig
            if(ip==nvector)then
               ! HERE PARTICLES GET MOVED FORWARD
@@ -64,24 +63,6 @@ subroutine move_fine(ilevel)
   end do
   ! End loop over grids
   if(ip>0)call move1(ind_grid,ind_part,ind_grid_part,ig,ip,ilevel)
-
-  !fix print variables since they are looped through three dimensions
-  if (neutrinos) then
-     counter_nu = counter_nu/3
-     v_rms_nu   = v_rms_nu/3.0d0
-     v_rms_nu   = sqrt(v_rms_nu/counter_nu)/2.99792458d5
-     counter_dm = counter_dm/3
-     v_rms_dm   = v_rms_dm/3.0d0
-     v_rms_dm   = sqrt(v_rms_dm/counter_dm)/2.99792458d5
-     write(*,*)'Neutrinos:  ',' #:',counter_nu,' v_rms:',v_rms_nu,'timestep:',neutrino_timestep
-     write(*,*)'Dark Matter:',' #:',counter_dm,' v_rms:',v_rms_dm
-     !write(*,*) ilevel
-  else
-     counter_dm = counter_dm/3
-     v_rms_dm   = v_rms_dm/3.0d0
-     v_rms_dm   = sqrt(v_rms_dm/counter_dm)/2.99792458d5
-     write(*,*)'Dark Matter:',' #:',counter_dm,' v_rms:',v_rms_dm, 'level:',ilevel
-  endif
 
 111 format('   Entering move_fine for level ',I2)
 
@@ -128,7 +109,6 @@ subroutine move_fine_static(ilevel)
                    & (.not. static_stars .and. is_not_DM(typep(ipart)) )  ) then                 
                  ! FIXME: there should be a static_sink as well
                  ! FIXME: what about debris?
-                 ! NEUTRINOS?
                  npart2=npart2+1
               endif
            else
@@ -490,7 +470,7 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
               ff(j,idim)=ff(j,idim)+f(indp(j,ind),idim)*vol(j,ind)
            end do
         end do
-#ifdef OUTPUT_PARTICLE_POTENTIAL ! GRAVITY - MUST ADD NEUTRINOS TO GRAVITY
+#ifdef OUTPUT_PARTICLE_POTENTIAL 
         do j=1,np
            ptcl_phi(ind_part(j)) = phi(indp(j,ind))
         end do
@@ -509,19 +489,11 @@ subroutine move1(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
           vp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
           D   = boxlen_ini**2*vp2/(2997.92458D0)**2/aexp**2 
            if (is_neutrino(typep(ind_part(j)))) then ! neutrinos
-              counter_nu = counter_nu + 1
-              v_rms_nu   = v_rms_nu + vp2/(aexp*(aexp**2/(boxlen_ini**2*100d0**2) + vp2/2.99792458d5**2))!make into actual v, instead of q/m
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE 
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
-           else ! DM
-              counter_dm = counter_dm +1
-              v_rms_dm   = v_rms_dm + vp2/(aexp*(aexp**2/(boxlen_ini**2*100d0**2) + vp2/2.99792458d5**2))
+           else ! DM 
               !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dtnew(ilevel) ! STANDARD NEWTONIAN UPDATE
               new_vp(j,idim)=vp(ind_part(j),idim)+(2.0D0*D+1.0D0)/sqrt(D+1.0D0)*ff(j,idim)*0.5D0*dtnew(ilevel)
-              if (D > 0.0001D0) then ! check if non-rel:
-                write(*,*) 'Relativistic parameter D in e.o.m: ',D
-              endif
-
            endif
         end do
      endif

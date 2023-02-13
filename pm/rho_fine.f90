@@ -139,7 +139,6 @@ subroutine rho_fine(ilevel,icount)
   ! Compute particle contribution to density field
   !---------------------------------------------------------
   ! Compute density due to current level particles
-  ! ADD NEUTRINOS, OR AUTOMATIC?
   if(pic)then
      call rho_from_current_level(ilevel)
   end if
@@ -565,7 +564,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>cic_levelmax)then
         do j=1,np
-           ! check for non-DM (and non-tracer) !NEUTRINOS?
+           ! check for non-DM (and non-tracer) 
            if ( ok(j) .and. is_not_DM(fam(j)) ) then
               rho(indp(j,ind))=rho(indp(j,ind))+vol2(j)
            end if
@@ -574,7 +573,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
 
      if(ilevel==cic_levelmax)then
         do j=1,np
-           ! check for DM ! SHOULD WE MAKE NEUTRINOS PART OF DM?
+           ! check for DM ! 
            if ( ok(j) .and. is_DM(fam(j)) ) then
               rho_top(indp(j,ind))=rho_top(indp(j,ind))+vol2(j)
            end if
@@ -601,7 +600,7 @@ subroutine cic_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      endif
 
-     ! Rescale the mass by mass_sph for baryon particles !NEUTRINOS COUNT AS PART OF DM?
+     ! Rescale the mass by mass_sph for baryon particles 
      if(star)then
         do j=1,np
            if ( is_not_DM(fam(j)) ) then
@@ -1392,7 +1391,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>cic_levelmax) then
         do j=1,np
-           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then ! SHOULD NEUTRINOS BE CONNECTED TO DM SOMEHOW?
+           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then 
               rho(indp(j,ind))=rho(indp(j,ind))+vol2(j)
            end if
         end do
@@ -1430,7 +1429,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      endif
 
-     ! For low mass baryon particles ! NOT NEUTRINOS?
+     ! For low mass baryon particles 
      if(star) then
         do j=1,np
            if ( is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then
@@ -1447,7 +1446,7 @@ subroutine tsc_amr(ind_cell,ind_part,ind_grid_part,x0,ng,np,ilevel)
         end do
      else if(ilevel>=cic_levelmax) then
         do j=1,np
-           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then ! WHAT HAPPENS HERE? SHOULD IT HAPPEN FOR NEUTRINOS?
+           if ( ok(j) .and. is_not_DM(fam(j)) .and. (.not.abandoned(j)) ) then 
               phi(indp(j,ind))=phi(indp(j,ind))+vol2(j)
            end if
         end do

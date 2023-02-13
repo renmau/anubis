@@ -42,6 +42,13 @@ subroutine init_time
      allocate(aexp_frw(0:n_frw),hexp_frw(0:n_frw))
      allocate(tau_frw(0:n_frw),t_frw(0:n_frw))
 
+     !==================================================
+     ! XXX Read hubble file
+     !==================================================
+     if(external_hubble_file) then
+       call read_hubble_file()
+     endif
+
      ! Compute Friedman model look up table
      if(myid==1)write(*,*)'Computing Friedman model'
      call friedman(dble(omega_m),dble(omega_l),dble(omega_k), &
@@ -854,28 +861,215 @@ subroutine friedman(O_mat_0,O_vac_0,O_k_0,alpha,axp_min, &
 
 end subroutine friedman
 
+!function dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)
+!  use amr_parameters
+!  real(kind=8)::dadtau,axp_tau,O_mat_0,O_vac_0,O_k_0
+!  dadtau = axp_tau*axp_tau*axp_tau *  &
+!       &   ( O_mat_0 + &
+!       &     O_vac_0 * axp_tau*axp_tau*axp_tau + &
+!       &     O_k_0   * axp_tau )
+!  dadtau = sqrt(dadtau)
+!  return
+!end function dadtau
+!
+!function dadt(axp_t,O_mat_0,O_vac_0,O_k_0)
+!  use amr_parameters
+!  real(kind=8)::dadt,axp_t,O_mat_0,O_vac_0,O_k_0
+!  dadt   = (1.0D0/axp_t)* &
+!       &   ( O_mat_0 + &
+!       &     O_vac_0 * axp_t*axp_t*axp_t + &
+!       &     O_k_0   * axp_t )
+!  dadt = sqrt(dadt)
+!  return
+!end function dadt
+
 function dadtau(axp_tau,O_mat_0,O_vac_0,O_k_0)
-  use amr_parameters
+  use amr_commons
+  implicit none
   real(kind=8)::dadtau,axp_tau,O_mat_0,O_vac_0,O_k_0
-  dadtau = axp_tau*axp_tau*axp_tau *  &
+  real(kind=8)::hubble_function_from_file,temp,r
+  logical :: newway = .false.
+
+  !==================================================
+  ! XXX Use Hubble from file
+  !==================================================
+  
+  if(external_hubble_file) then
+    newway = .true.
+    if(axp_tau < aexp_hubble_frw(1) .or. axp_tau > aexp_hubble_frw(n_hubble_frw)) then
+      newway = .false.
+    endif
+  endif
+
+  if(newway) then
+    dadtau = hubble_function_from_file(axp_tau) * axp_tau**3
+    
+    temp = axp_tau*axp_tau*axp_tau *  &
        &   ( O_mat_0 + &
        &     O_vac_0 * axp_tau*axp_tau*axp_tau + &
-       &     O_k_0   * axp_tau )
-  dadtau = sqrt(dadtau)
+       &     O_k_0   * axp_tau + omega_r/axp_tau)
+    temp = sqrt(temp)
+    temp = temp / dadtau
+
+    ! Print so we can see the difference in H relative to the  standard
+    call random_number(r)
+    if(r < 0.00001d0 .and. myid==1) then
+      write(*,*) '(a, H_LCDM / H_file): ', axp_tau, temp
+    endif
+    
+  else
+
+    dadtau = axp_tau*axp_tau*axp_tau *  &
+       &   ( O_mat_0 + &
+       &     O_vac_0 * axp_tau*axp_tau*axp_tau + &
+       &     O_k_0   * axp_tau + omega_r/axp_tau)
+    dadtau = sqrt(dadtau)
+  
+  endif
+ 
   return
 end function dadtau
 
+
 function dadt(axp_t,O_mat_0,O_vac_0,O_k_0)
-  use amr_parameters
+  use amr_commons
+  implicit none
   real(kind=8)::dadt,axp_t,O_mat_0,O_vac_0,O_k_0
-  dadt   = (1.0D0/axp_t)* &
+  real(kind=8)::hubble_function_from_file,temp,r
+  logical :: newway = .false.
+
+  !==================================================
+  ! XXX Use Hubble from file
+  !==================================================
+  if(external_hubble_file) then
+    newway = .true.
+    if(axp_t < aexp_hubble_frw(1) .or. axp_t > aexp_hubble_frw(n_hubble_frw)) then
+      newway = .false.
+    endif
+  endif
+
+  if(newway) then
+    dadt = hubble_function_from_file(axp_t) * axp_t
+
+    temp   = (1.0D0/axp_t)* &
        &   ( O_mat_0 + &
        &     O_vac_0 * axp_t*axp_t*axp_t + &
-       &     O_k_0   * axp_t )
-  dadt = sqrt(dadt)
+       &     O_k_0   * axp_t + omega_r/axp_t)
+    temp = sqrt(temp)
+    temp = temp / dadt
+
+    ! Print so we can see the difference in H relative to the  standard
+    call random_number(r)
+    if(r < 0.00001d0 .and. myid==1) then
+      write(*,*) '(a, H_LCDM / H_file): ', axp_t, temp
+    endif
+  
+  else
+    
+    dadt   = (1.0D0/axp_t)* &
+       &   ( O_mat_0 + &
+       &     O_vac_0 * axp_t*axp_t*axp_t + &
+       &     O_k_0   * axp_t + omega_r/axp_t)
+    dadt = sqrt(dadt)
+
+  endif
+
   return
 end function dadt
 
 
+!==================================================
+! XXX Fetch H(a) from data read from file
+!==================================================
+function hubble_function_from_file(a)
+  use amr_commons
+  implicit none
+  integer :: i
+  real(kind=8)::hubble_function_from_file,a
+
+  ! Find neighboring times
+  i=1
+  do while(aexp_hubble_frw(i) < a .and. i<n_hubble_frw)
+    i=i+1
+  end do
+
+  ! Interpolate
+  hubble_function_from_file = hubble_frw(i)  *(a-aexp_hubble_frw(i-1))/(aexp_hubble_frw(i  )-aexp_hubble_frw(i-1)) + &
+                            & hubble_frw(i-1)*(a-aexp_hubble_frw(i  ))/(aexp_hubble_frw(i-1)-aexp_hubble_frw(i  ))
+  return
+end function hubble_function_from_file
 
 
+!==================================================
+! XXX Read (1+z, w, 0.1H) from file
+!==================================================
+subroutine read_hubble_file
+  use amr_commons
+  use mpi_mod
+  implicit none
+  integer :: i,unit = 10
+  real(kind=8) :: col1, col2, col3
+#ifndef WITHOUTMPI
+  integer::info
+#endif
+  
+  ! Open file and count number of lines
+  open(unit,file=filename_hubble,status="old",action="read")
+  n_hubble_frw = 0
+  do 
+  read (unit,*, end=11) 
+    n_hubble_frw = n_hubble_frw + 1 
+  enddo
+  11 rewind(unit)
+
+  ! Allocate arrays
+  allocate(aexp_hubble_frw(1:n_hubble_frw),hubble_frw(1:n_hubble_frw))
+
+  ! Read data (Assuming fileformat: 1+z, H (h km/s/kpc))
+  if(myid==1)then
+    write(*,*) 'Reading H(a) from file ', filename_hubble
+    write(*,*) 'nlines = ', n_hubble_frw
+  endif
+
+  do i=1, n_hubble_frw
+    read(unit,*,end=22) col1, col2, col3
+    aexp_hubble_frw(i) = 1.0/col1
+    hubble_frw(i) = 10.0d0 * col3
+  end do
+  22 close(unit)
+
+  ! Output data to screen so that we can see all is correct
+  if(myid==1)then
+    write(*,*) 'Outputting (a, H(a)/H0):'
+    do i=1,n_hubble_frw
+      write(*,*) i, ' a: ', aexp_hubble_frw(i), ' H(a)/H0: ', hubble_frw(i)
+    end do
+  endif
+  
+  ! Sanity checks (too few points or not covering range)
+  if(n_hubble_frw < 100 .or. aexp_hubble_frw(1) > aexp_ini * 1.001d0 .or. aexp_hubble_frw(n_hubble_frw) < 0.999d0) then
+    write(*,*) 'The Hubble file is not good, aborting'
+    write(*,*) 'Number of lines (>= 100): ', n_hubble_frw
+    write(*,*) 'Min a (<= aini): ', aexp_hubble_frw(1), ' aini: ', aexp_ini
+    write(*,*) 'Max a (>= 1.0): ', aexp_hubble_frw(n_hubble_frw)
+#ifndef WITHOUTMPI
+    call MPI_ABORT(MPI_COMM_WORLD,1,info)
+#else
+    stop
+#endif
+  endif
+
+end subroutine read_hubble_file
+
+
+!==================================================
+! XXX Parameters in INIT_PARAMS
+!==================================================
+!
+! external_hubble_file=.true.
+! filename_hubble="../../../MNCCP/nucome/0.0eV/reps_files/Hz.txt"
+!
+!If we don't have the file and want OmegaR in H(a) then one can add this here
+! omega_r=9.30493d-5
+!
+!==================================================

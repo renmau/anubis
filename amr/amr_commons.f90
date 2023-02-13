@@ -37,6 +37,19 @@ module amr_commons
   integer::n_frw
   real(dp),allocatable,dimension(:)::aexp_frw,hexp_frw,tau_frw,t_frw
 
+  !========================================
+  ! XXX Add radiation parameter
+  !========================================
+  real(dp)::omega_r=0.0d0
+  
+  !==================================================
+  ! XXX For Hubble function from file
+  !==================================================
+  integer :: n_hubble_frw
+  real(dp),allocatable,dimension(:)::hubble_frw,aexp_hubble_frw
+  CHARACTER(LEN=80)::filename_hubble
+  logical::external_hubble_file=.false.
+
   ! Initial conditions parameters from grafic
   integer                  ::nlevelmax_part
   real(dp)                 ::aexp_ini=10

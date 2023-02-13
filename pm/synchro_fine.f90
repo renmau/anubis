@@ -517,7 +517,7 @@ subroutine sync(ind_grid,ind_part,ind_grid_part,ng,np,ilevel)
            new_vp(j,idim)=ff(j,idim)
         end do
      else
-        do j=1,np !have to add neutrino test here? Not necessary yet
+        do j=1,np 
            !new_vp(j,idim)=vp(ind_part(j),idim)+ff(j,idim)*0.5D0*dteff(j) !newtonian
            vpp2 = vp(ind_part(j),1)**2 + vp(ind_part(j),2)**2 + vp(ind_part(j),3)**2
            DDD = boxlen_ini**2*vpp2/(2997.92458D0)**2/aexp**2 

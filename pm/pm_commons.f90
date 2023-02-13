@@ -75,7 +75,6 @@ module pm_commons
 
   ! Particle keys for outputing. They should match the above particle
   ! types, except for 'under' family
-  ! ADD NEUTRINOS HERE
   character(len=13), dimension(-NFAMILIES:NFAMILIES), parameter :: particle_family_keys = (/ &
       'neutrino_tracer', ' other_tracer', 'debris_tracer', ' cloud_tracer', '  star_tracer', ' other_tracer', &
        '   gas_tracer', &
@@ -174,7 +173,6 @@ contains
     ! DM     tpii == 0
     ! stars  tpii != 0 and idpii > 0
     ! sinks  tpii != 0 and idpii < 0
-    ! ADD NEUTRINOS HERE? WHAT RANGE?
     !
     ! This is mostly for support of GRAFFIC I/O.
     ! The reason we use idpii instead of idp is to prevent name clashes
@@ -182,7 +180,6 @@ contains
     integer, intent(in)  :: idpii
 
     type(part_t) :: props2type
-    ! ADD NEUTRINOS HERE?
     if (tpii == 0) then
        props2type%family = FAM_DM
     else if (idpii > 0) then

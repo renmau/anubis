@@ -847,13 +847,8 @@ contains
     ! Setup DM for all particles 
     do ipart=1, npart
        typep(ipart)%family = FAM_DM
-       
-       ! make half of the particles neutrinos for test
-       !if (MOD(ipart,2) == 0) then
-         !typep(ipart)%family = FAM_NEUTRINO
-       !end if
 
-       typep(ipart)%tag = 0 ! Give neutrinos different tag later if species separated?
+       typep(ipart)%tag = 0
     end do
 
     ! Compute particle initial age and metallicity
@@ -995,7 +990,7 @@ end subroutine init_part
 #define TIME_START(cs) call SYSTEM_CLOCK(COUNT=cs)
 #define TIME_END(ce) call SYSTEM_CLOCK(COUNT=ce)
 #define TIME_SPENT(cs,ce,cr) REAL((ce-cs)/cr)
-subroutine load_gadget ! modify routine to red neutrinos and cdm
+subroutine load_gadget 
   ! This routine only creates DM particles
   use amr_commons
   use pm_commons
@@ -1023,7 +1018,6 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
   real(dp),dimension(1:nvector,1:3)::xx_dp
   integer::clock_start,clock_end,clock_rate
   real(dp)::gadgetvfact
-  !real(dp)::Omega_mnu
   real(dp)::Omega_cdm
   real(dp)::vnorm
 
@@ -1146,7 +1140,7 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
            xx_dp(1,1) = pos(1,i)/gadgetheader%boxsize
            xx_dp(1,2) = pos(2,i)/gadgetheader%boxsize
            xx_dp(1,3) = pos(3,i)/gadgetheader%boxsize
-           ! add flip manual if particles from gevolution are outside box
+           ! add flip manual if particles are outside box
            if(xx_dp(1,1) < 0.0) xx_dp(1,1) = xx_dp(1,1) + 1.0d0
            if(xx_dp(1,1) > 1.0) xx_dp(1,1) = xx_dp(1,1) - 1.0d0
            if(xx_dp(1,2) < 0.0) xx_dp(1,2) = xx_dp(1,2) + 1.0d0
@@ -1165,21 +1159,19 @@ subroutine load_gadget ! modify routine to red neutrinos and cdm
               end if
 #endif
               xp(ipart,1:3)=xx_dp(1,1:3) 
-              !vnorm = sqrt(vel(1,i)**2 + vel(2,i)**2 + vel(3,i)**2)*sqrt(aexp)/2.99792458d5
-              !vnorm = 1.0d0/sqrt(1.0d0 - vnorm*vnorm)
               
-              vp(ipart,1)  =vel(1, i) * gadgetvfact!* vnorm 
-              vp(ipart,2)  =vel(2, i) * gadgetvfact!* vnorm 
-              vp(ipart,3)  =vel(3, i) * gadgetvfact!* vnorm
+              vp(ipart,1)  =vel(1, i) * gadgetvfact 
+              vp(ipart,2)  =vel(2, i) * gadgetvfact 
+              vp(ipart,3)  =vel(3, i) * gadgetvfact
               
               mp(ipart)    = massparticles
-              !write(*,*) mp(ipart)
+              
               levelp(ipart)=levelmin
               idp(ipart)   =ids(i)
 
               ! Get the particle type
               typep(ipart)%family = FAM_NEUTRINO 
-              typep(ipart)%tag    = 0 ! should be 0 or 6? do I have to add neutrinos in counter and specify tag?
+              typep(ipart)%tag    = 0 
 #ifndef WITHOUTMPI
            endif
 #endif
