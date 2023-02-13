@@ -1,34 +1,60 @@
-[1]: https://bitbucket.org/rteyssie/ramses/wiki/Content
-[2]: https://bitbucket.org/rteyssie/ramses/wiki/AutoTests
-[3]: http://www.ics.uzh.ch/~teyssier/ramses/RAMSES.html
-[4]: https://bitbucket.org/rteyssie/ramses/wiki/ramses_ug.pdf
-[5]: https://bitbucket.org/vperret/dice
-[6]: https://bitbucket.org/ohahn/music
-[7]: https://github.com/nvaytet/osyris
-[8]: https://github.com/pynbody/pynbody
+ANUBIS is an extension of RAMSES including massive neutrino particles.
+
+cosmo_neutrinos.nml shows an example for a run file with massive neutrinos and an extarnal hubble
+function file. 
+
+The input files are in gadget format and separate for the cdm and neutrinos. 
+
+Changes have been made in the files:
+- pm/move_fine.f90
+- pm/synchro_fine.f90
+- pm/init_part.f90
+- pm/rho_fine.f90
+- amr/amr_parameters.f90
+- amr/read_params.f90
+- hydro/read_hydro_params.f90
+
+No changes have currently been implemented in the time-stepping method. 
+
+The code was compiled with
+- Intel_parallel_studio/2019/3.062
+- gcc/8.3.1
+- python/2.7
+
+For multiple nodes and cpus and a log-file it can be run like:
+mpirun -np 144 -perhost 16 -hostfile hostfile.txt ./ramses3d cosmo.nml | tee -a log.txt
+
+--------------------------------------------------------------------------------------------
+
+RAMSES README:
+RAMSES version 3.10
+
+Copyright Romain Teyssier and CEA from 1997 to 2007
+
+Copyright Romain Teyssier and the University of Zurich from 2008 to 2013
+
+romain.teyssier@gmail.com
+
+This software is  an open source computer program whose  purpose is to
+perform  simulations of  self-gravitating  fluids  with Adaptive  Mesh
+Refinement on massively parallel computers. It is based on the Fortran
+90 language and the MPI communication library.
+
+When using the RAMSES code, please cite the following paper for proper
+credit:
+
+Teyssier, R., "Cosmological hydrodynamics with adaptive mesh refinement.
+A new high resolution code called RAMSES", 2002, A&A, 385, 337
+
+The code is available for download and documentation in
+https://bitbucket.org/rteyssie/ramses
+
+You can quickly test your installation by executing:
+$ cd bin
+$ make
+$ cd ..
+$ bin/ramses1d namelist/tube1d.nml
+
+Enjoy !
 
 
-## This is the [ramses](https://bitbucket.org/rteyssie/ramses) bitbucket repository.
-
-Ramses is an open source code to model astrophysical systems, featuring self-gravitating, magnetised, compressible, radiative fluid flows. It is based  on the Adaptive Mesh Refinement (AMR)  technique on a  fully-threaded graded octree. 
-[ramses](https://bitbucket.org/rteyssie/ramses) is written in  Fortran 90 and is making intensive use of the Message Passing Interface (MPI) library.
-
-You can go to the user's guide in [PDF here][4] and in the [WIKI here][1].
-
-Check regularly the [automatic test page][2]. Visit the code web site [here][3].
-
-Download the code by cloning the git repository using 
-```
-$ git clone https://bitbucket.org/rteyssie/ramses
-```
-This is the development branch. To get the last stable release do the following
-```
-$ git clone --branch stable_18_09 https://bitbucket.org/rteyssie/ramses
-```
-Please register also to the [mailing list](http://groups.google.com/group/ramses_users).
-
-To generate idealised initial conditions of galaxies, check out the [DICE][5] code.
-
-To generate cosmological initial conditions, check out the [MUSIC][6] code.
-
-To visualize RAMSES data, we encourage you to use the [OSYRIS][7] or the [PYNBODY][8] codes.
